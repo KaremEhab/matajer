@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>63640744288-goi9svb23cmjosg9lq5jda6qgtvk6r7s.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.63640744288-goi9svb23cmjosg9lq5jda6qgtvk6r7s</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>63640744288-03mlijj18niva34fuundb1684jvkoh7h.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCNPGoa-ztCGDEnSDsh6tBVjaLgvz37rlc</string>
+	<key>GCM_SENDER_ID</key>
+	<string>63640744288</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.matajer.matajer</string>
+	<key>PROJECT_ID</key>
+	<string>matajr-40a00</string>
+	<key>STORAGE_BUCKET</key>
+	<string>matajr-40a00.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:63640744288:ios:348699a85084d1a683ae05</string>
+</dict>
+</plist>

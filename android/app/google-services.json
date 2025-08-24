@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "63640744288",
+    "project_id": "matajr-40a00",
+    "storage_bucket": "matajr-40a00.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:63640744288:android:959969fbbdc31e8183ae05",
+        "android_client_info": {
+          "package_name": "com.matajer.matajer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "63640744288-2pphha6cmbh7cbn7fql07qp03vt0t5vg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.matajer.matajer",
+            "certificate_hash": "9bdf905b26e94d6c2609e15b3dca176469613dbb"
+          }
+        },
+        {
+          "client_id": "63640744288-p02m2tbuq7jgoke9ms1eoqrq82ubrnv6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCO5OZNjoaQpmF7wmyby5vvnGaoYtJvnOM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "63640744288-m87vhc1vh4k28s1120ol0efquih51lj3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "63640744288-16vjcjpp15tl6rpcuhvab383qiqvpus3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.matajr"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:63640744288:android:4ad3e5ce38d521ea83ae05",
+        "android_client_info": {
+          "package_name": "com.matajr.matajr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "63640744288-aimdipr96fgvra2tnv002em0mkanlsih.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.matajr.matajr",
+            "certificate_hash": "34b6b0b97c4ddc78a7fe70067c4555a7096f0fbd"
+          }
+        },
+        {
+          "client_id": "63640744288-p02m2tbuq7jgoke9ms1eoqrq82ubrnv6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCO5OZNjoaQpmF7wmyby5vvnGaoYtJvnOM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "63640744288-m87vhc1vh4k28s1120ol0efquih51lj3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "63640744288-16vjcjpp15tl6rpcuhvab383qiqvpus3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.matajr"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

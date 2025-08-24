@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="facebook_app_id">957782142162304</string>
+    <string name="fb_login_protocol_scheme">fb957782142162304</string>
+    <string name="facebook_client_token">b60efcef2604c8cf3f49bffeaeafe335</string>
+
+    <string name="app_name">"Matjar"</string>
+
+</resources>

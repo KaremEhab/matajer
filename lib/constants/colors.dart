@@ -1,0 +1,22 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+const primaryColor = Color(0xff935EF3);
+const secondaryColor = Color(0xffF6F0FE);
+const primaryDarkColor = Color(0xff7223CA);
+const textColor = Color(0xff0F0F23);
+const scaffoldColor = Color(0xffFBFEFF);
+const formFieldColor = Color(0xffeef1f5);
+const logoShadowColor = Color(0xffcda7f6);
+const lightGreyColor = Color(0xffd7d7d9);
+const greyColor = Colors.grey;
+const transparentColor = Colors.transparent;
+const starColor = CupertinoColors.systemYellow;
+const blueColor = CupertinoColors.activeBlue;
+const chatDateColor = Color(0xff797C7B);
+const projectsBg = Color(0xffeff1f9);
+const senderColor = Color(0xffe5e8f8);
+const dayContainerColor = Color(0xffF1F0FB);
+const receiverColor = Color(0xfff3f4f8);
+const filterButton = Color(0xfff6f8fc);
+const greenColor = Color(0xff5CA92D);
