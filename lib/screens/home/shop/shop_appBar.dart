@@ -72,7 +72,7 @@ class _ShopAppBarState extends State<ShopAppBar> {
           automaticallyImplyLeading: false,
           forceMaterialTransparency: true,
           titleSpacing: 0,
-          expandedHeight: 0.47.sh,
+          expandedHeight: CommentsCubit.get(context).comments.isNotEmpty ? 0.47.sh : 0.47.sh - 140.h,
           systemOverlayStyle: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
             statusBarBrightness: shopScrollOffset >= 430.h
@@ -341,238 +341,235 @@ class _ShopAppBarState extends State<ShopAppBar> {
                           }
                         },
                         builder: (context, state) {
-                          return Center(
-                            child: SizedBox(
-                              height: 130.h,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: CommentsCubit.get(
-                                  context,
-                                ).comments.length,
-                                itemBuilder: (context, index) {
-                                  final comment = CommentsCubit.get(
+                          if (CommentsCubit.get(context).comments.isNotEmpty) {
+                            return Center(
+                              child: SizedBox(
+                                height: 130.h,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: CommentsCubit.get(
                                     context,
-                                  ).comments[index];
+                                  ).comments.length,
+                                  itemBuilder: (context, index) {
+                                    final comment = CommentsCubit.get(
+                                      context,
+                                    ).comments[index];
 
-                                  if (state is! CommentsLoadingState) {
-                                    return Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Center(
-                                          child: shopAppBarCommentShimmer(
-                                            shopScrollOffset,
+                                    if (state is CommentsLoadingState) {
+                                      return Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Center(
+                                            child: shopAppBarCommentShimmer(
+                                              shopScrollOffset,
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    );
-                                  }
+                                        ],
+                                      );
+                                    }
 
-                                  return ConditionalBuilder(
-                                    condition: display,
-                                    builder: (context) {
-                                      return FutureBuilder<UserModel>(
-                                        future: UserCubit.get(
-                                          context,
-                                        ).getUserInfoById(comment.userId),
-                                        builder: (context, snapshot) {
-                                          if (!snapshot.hasData) {
-                                            return Center(
-                                              child: shopAppBarCommentShimmer(
-                                                shopScrollOffset,
-                                              ),
-                                            );
-                                          }
-
-                                          final user = snapshot.data!;
-
-                                          return RepaintBoundary(
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                              child: AnimatedAlign(
-                                                duration: const Duration(
-                                                  milliseconds: 600,
+                                    return ConditionalBuilder(
+                                      condition: display,
+                                      builder: (context) {
+                                        return FutureBuilder<UserModel>(
+                                          future: UserCubit.get(
+                                            context,
+                                          ).getUserInfoById(comment.userId),
+                                          builder: (context, snapshot) {
+                                            if (!snapshot.hasData) {
+                                              return Center(
+                                                child: shopAppBarCommentShimmer(
+                                                  shopScrollOffset,
                                                 ),
-                                                curve: Curves.easeInOut,
-                                                alignment: Alignment.topCenter,
-                                                heightFactor:
-                                                    shopScrollOffset >= 150.h
-                                                    ? 0
-                                                    : 1,
-                                                widthFactor:
-                                                    shopScrollOffset >= 150.h
-                                                    ? 0
-                                                    : 1,
-                                                child: AnimatedSize(
+                                              );
+                                            }
+
+                                            final user = snapshot.data!;
+
+                                            return RepaintBoundary(
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                                child: AnimatedAlign(
                                                   duration: const Duration(
                                                     milliseconds: 600,
                                                   ),
                                                   curve: Curves.easeInOut,
-                                                  child: Center(
-                                                    child: Padding(
-                                                      padding: EdgeInsets.only(
-                                                        left: index == 0
-                                                            ? 7.h
-                                                            : 0,
-                                                        right: 10.h,
-                                                        top: 10.h,
-                                                      ),
-                                                      child: Material(
-                                                        color: scaffoldColor,
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              15,
+                                                  alignment:
+                                                      Alignment.topCenter,
+                                                  heightFactor:
+                                                      shopScrollOffset >= 150.h
+                                                      ? 0
+                                                      : 1,
+                                                  widthFactor:
+                                                      shopScrollOffset >= 150.h
+                                                      ? 0
+                                                      : 1,
+                                                  child: AnimatedSize(
+                                                    duration: const Duration(
+                                                      milliseconds: 600,
+                                                    ),
+                                                    curve: Curves.easeInOut,
+                                                    child: Center(
+                                                      child: Padding(
+                                                        padding:
+                                                            EdgeInsets.only(
+                                                              left: index == 0
+                                                                  ? 7.h
+                                                                  : 0,
+                                                              right: 10.h,
+                                                              top: 10.h,
                                                             ),
-                                                        child: InkWell(
+                                                        child: Material(
+                                                          color: scaffoldColor,
                                                           borderRadius:
                                                               BorderRadius.circular(
                                                                 15,
                                                               ),
-                                                          onTap: () {
-                                                            navigateTo(
-                                                              context: context,
-                                                              screen: ShopComments(
-                                                                shopModel: widget
-                                                                    .shopModel,
-                                                              ),
-                                                            );
-                                                          },
-                                                          child: Container(
-                                                            padding:
-                                                                EdgeInsets.all(
-                                                                  10.h,
+                                                          child: InkWell(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  15,
                                                                 ),
-                                                            width:
-                                                                CommentsCubit.get(
-                                                                          context,
-                                                                        )
-                                                                        .comments
-                                                                        .length ==
-                                                                    1
-                                                                ? 0.96.sw
-                                                                : 300.w,
-                                                            height: 0.32.sh,
-                                                            clipBehavior:
-                                                                Clip.none,
-                                                            decoration: BoxDecoration(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    15,
+                                                            onTap: () {
+                                                              navigateTo(
+                                                                context:
+                                                                    context,
+                                                                screen: ShopComments(
+                                                                  shopModel: widget
+                                                                      .shopModel,
+                                                                ),
+                                                              );
+                                                            },
+                                                            child: Container(
+                                                              padding:
+                                                                  EdgeInsets.all(
+                                                                    10.h,
                                                                   ),
-                                                              border: Border.all(
-                                                                color: textColor
-                                                                    .withOpacity(
-                                                                      0.1,
+                                                              width:
+                                                                  CommentsCubit.get(
+                                                                        context,
+                                                                      ).comments.length ==
+                                                                      1
+                                                                  ? 0.96.sw
+                                                                  : 300.w,
+                                                              height: 0.32.sh,
+                                                              clipBehavior:
+                                                                  Clip.none,
+                                                              decoration: BoxDecoration(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      15,
                                                                     ),
-                                                              ),
-                                                            ),
-                                                            child: Column(
-                                                              spacing: 5,
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              children: [
-                                                                Row(
-                                                                  spacing: 5,
-                                                                  children: [
-                                                                    Container(
-                                                                      padding:
-                                                                          EdgeInsets.all(
-                                                                            4,
-                                                                          ),
-                                                                      decoration: BoxDecoration(
-                                                                        color: Color(
-                                                                          0xFFD7E0FF,
-                                                                        ),
-                                                                        shape: BoxShape
-                                                                            .circle,
+                                                                border: Border.all(
+                                                                  color: textColor
+                                                                      .withOpacity(
+                                                                        0.1,
                                                                       ),
-                                                                      child: Container(
+                                                                ),
+                                                              ),
+                                                              child: Column(
+                                                                spacing: 5,
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  Row(
+                                                                    spacing: 5,
+                                                                    children: [
+                                                                      Container(
                                                                         padding:
                                                                             EdgeInsets.all(
-                                                                              3,
+                                                                              4,
                                                                             ),
                                                                         decoration: BoxDecoration(
-                                                                          color:
-                                                                              primaryColor,
+                                                                          color: Color(
+                                                                            0xFFD7E0FF,
+                                                                          ),
                                                                           shape:
                                                                               BoxShape.circle,
                                                                         ),
-                                                                        child: CircleAvatar(
-                                                                          radius:
-                                                                              23.h,
-                                                                          backgroundImage: NetworkImage(
-                                                                            user.profilePicture.toString(),
+                                                                        child: Container(
+                                                                          padding:
+                                                                              EdgeInsets.all(
+                                                                                3,
+                                                                              ),
+                                                                          decoration: BoxDecoration(
+                                                                            color:
+                                                                                primaryColor,
+                                                                            shape:
+                                                                                BoxShape.circle,
+                                                                          ),
+                                                                          child: CircleAvatar(
+                                                                            radius:
+                                                                                23.h,
+                                                                            backgroundImage: NetworkImage(
+                                                                              user.profilePicture.toString(),
+                                                                            ),
                                                                           ),
                                                                         ),
                                                                       ),
-                                                                    ),
-                                                                    Expanded(
-                                                                      flex: 2,
-                                                                      child: Column(
-                                                                        crossAxisAlignment:
-                                                                            CrossAxisAlignment.start,
-                                                                        children: [
-                                                                          Text(
-                                                                            user.username,
-                                                                            overflow:
-                                                                                TextOverflow.ellipsis,
-                                                                            maxLines:
-                                                                                1,
-                                                                            style: TextStyle(
-                                                                              fontWeight: FontWeight.w900,
-                                                                              fontSize: 16.sp,
+                                                                      Expanded(
+                                                                        flex: 2,
+                                                                        child: Column(
+                                                                          crossAxisAlignment:
+                                                                              CrossAxisAlignment.start,
+                                                                          children: [
+                                                                            Text(
+                                                                              user.username,
+                                                                              overflow: TextOverflow.ellipsis,
+                                                                              maxLines: 1,
+                                                                              style: TextStyle(
+                                                                                fontWeight: FontWeight.w900,
+                                                                                fontSize: 16.sp,
+                                                                              ),
                                                                             ),
-                                                                          ),
-                                                                          Text(
-                                                                            user.emirate,
-                                                                            overflow:
-                                                                                TextOverflow.ellipsis,
-                                                                            maxLines:
-                                                                                1,
-                                                                            style: TextStyle(
-                                                                              fontWeight: FontWeight.w600,
+                                                                            Text(
+                                                                              user.emirate,
+                                                                              overflow: TextOverflow.ellipsis,
+                                                                              maxLines: 1,
+                                                                              style: TextStyle(
+                                                                                fontWeight: FontWeight.w600,
+                                                                              ),
                                                                             ),
-                                                                          ),
-                                                                        ],
+                                                                          ],
+                                                                        ),
                                                                       ),
-                                                                    ),
-                                                                    Expanded(
-                                                                      child: Row(
-                                                                        mainAxisAlignment:
-                                                                            MainAxisAlignment.end,
-                                                                        children: [
-                                                                          Text(
-                                                                            comment.rating.toString(),
-                                                                          ),
-                                                                          Icon(
-                                                                            Icons.star_rounded,
-                                                                            color:
-                                                                                CupertinoColors.systemYellow,
-                                                                          ),
-                                                                        ],
+                                                                      Expanded(
+                                                                        child: Row(
+                                                                          mainAxisAlignment:
+                                                                              MainAxisAlignment.end,
+                                                                          children: [
+                                                                            Text(
+                                                                              comment.rating.toString(),
+                                                                            ),
+                                                                            Icon(
+                                                                              Icons.star_rounded,
+                                                                              color: CupertinoColors.systemYellow,
+                                                                            ),
+                                                                          ],
+                                                                        ),
                                                                       ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                                Flexible(
-                                                                  child: Text(
-                                                                    comment
-                                                                        .comment,
-                                                                    overflow:
-                                                                        TextOverflow
-                                                                            .ellipsis,
-                                                                    style: TextStyle(
-                                                                      fontSize:
-                                                                          16.sp,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w500,
+                                                                    ],
+                                                                  ),
+                                                                  Flexible(
+                                                                    child: Text(
+                                                                      comment
+                                                                          .comment,
+                                                                      overflow:
+                                                                          TextOverflow
+                                                                              .ellipsis,
+                                                                      style: TextStyle(
+                                                                        fontSize:
+                                                                            16.sp,
+                                                                        fontWeight:
+                                                                            FontWeight.w500,
+                                                                      ),
                                                                     ),
                                                                   ),
-                                                                ),
-                                                              ],
+                                                                ],
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
@@ -581,19 +578,22 @@ class _ShopAppBarState extends State<ShopAppBar> {
                                                   ),
                                                 ),
                                               ),
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                    fallback: (v) => Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  );
-                                },
+                                            );
+                                          },
+                                        );
+                                      },
+                                      fallback: (v) => Center(
+                                        child: shopAppBarCommentShimmer(
+                                          shopScrollOffset,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          }
+                          return SizedBox.shrink();
                         },
                       ),
                     ],
@@ -937,101 +937,81 @@ Widget shopAppBarCommentShimmer(double shopScrollOffset) {
           duration: const Duration(milliseconds: 600),
           curve: Curves.easeInOut,
           child: Center(
-            child: Padding(
-              padding: EdgeInsets.only(left: 7.h, right: 10.h, top: 10.h),
-              child: Material(
+            child: Container(
+              width: 0.97.sw,
+              height: 130,
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              margin: const EdgeInsets.fromLTRB(7, 10, 7, 10),
+              decoration: BoxDecoration(
                 color: scaffoldColor,
                 borderRadius: BorderRadius.circular(15),
-                child: Container(
-                  width: 0.97.sw,
-                  height: 130,
-                  margin: const EdgeInsets.fromLTRB(10, 10, 10, 16),
-                  child: Column(
+                border: Border.all(color: textColor.withOpacity(0.1)),
+              ),
+              child: Column(
+                spacing: 15,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top Row: Avatar + Name/Location + Stars/Date
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top Row: Avatar + Name/Location + Stars/Date
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      // Avatar shimmer
+                      shimmerPlaceholder(height: 44, width: 44, radius: 100),
+                      const SizedBox(width: 10),
+                      // Username & emirate
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            shimmerPlaceholder(
+                              width: 100,
+                              height: 16,
+                              radius: 4,
+                            ),
+                            const SizedBox(height: 4),
+                            shimmerPlaceholder(
+                              width: 60,
+                              height: 13,
+                              radius: 4,
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Stars & Date
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          // Avatar shimmer
-                          Container(
-                            padding: EdgeInsets.all(3),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Container(
-                              padding: EdgeInsets.all(2),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: shimmerPlaceholder(
-                                height: 44,
-                                width: 44,
-                                radius: 100,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          // Username & emirate
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                shimmerPlaceholder(
-                                  width: 100,
+                          Row(
+                            children: List.generate(
+                              5,
+                              (index) => Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 1,
+                                ),
+                                child: shimmerPlaceholder(
+                                  width: 16,
                                   height: 16,
                                   radius: 4,
                                 ),
-                                const SizedBox(height: 4),
-                                shimmerPlaceholder(
-                                  width: 60,
-                                  height: 13,
-                                  radius: 4,
-                                ),
-                              ],
+                              ),
                             ),
                           ),
-                          // Stars & Date
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Row(
-                                children: List.generate(
-                                  5,
-                                  (index) => Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 1,
-                                    ),
-                                    child: shimmerPlaceholder(
-                                      width: 16,
-                                      height: 16,
-                                      radius: 4,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              shimmerPlaceholder(
-                                width: 80,
-                                height: 12,
-                                radius: 4,
-                              ),
-                            ],
-                          ),
+                          const SizedBox(height: 4),
+                          shimmerPlaceholder(width: 80, height: 12, radius: 4),
                         ],
-                      ),
-
-                      // Comment shimmer (3 lines)
-                      shimmerPlaceholder(
-                        width: double.infinity,
-                        height: 14,
-                        radius: 6,
                       ),
                     ],
                   ),
-                ),
+
+                  // Comment shimmer (3 lines)
+                  shimmerPlaceholder(
+                    width: double.infinity,
+                    height: 14,
+                    radius: 6,
+                  ),
+                ],
               ),
             ),
           ),

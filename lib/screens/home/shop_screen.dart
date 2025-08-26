@@ -51,8 +51,6 @@ class ShopScreenState extends State<ShopScreen> {
     // Delay Cubit access to after widget tree has built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeSubcategories();
-      CommentsCubit.get(context).getCommentsByShopId(widget.shopModel.shopId);
-      ProductCubit.get(context).getCartProducts();
     });
   }
 
@@ -76,6 +74,9 @@ class ShopScreenState extends State<ShopScreen> {
     });
 
     displayProducts = hasProducts;
+
+    CommentsCubit.get(context).getCommentsByShopId(widget.shopModel.shopId);
+    ProductCubit.get(context).getCartProducts();
   }
 
   @override
