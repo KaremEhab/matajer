@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -19,6 +20,7 @@ import 'package:matajer/cubit/product/product_state.dart';
 import 'package:matajer/cubit/user/user_cubit.dart';
 import 'package:matajer/generated/l10n.dart';
 import 'package:matajer/models/order_model.dart';
+import 'package:matajer/models/shop_model.dart';
 import 'package:matajer/models/user_model.dart';
 import 'package:matajer/screens/auth/login.dart';
 import 'package:matajer/screens/auth/register_as_seller.dart';
@@ -554,6 +556,11 @@ class _ShopSwitcherContentState extends State<_ShopSwitcherContent>
     // Now it's safe to update
     await UserCubit.get(context).getShopById(shopId);
 
+    await CacheHelper.saveData(
+      key: 'currentShopModel',
+      value: jsonEncode(currentShopModel!.toMap()),
+    );
+
     Navigator.pop(context);
     isSeller = true;
 
@@ -584,148 +591,152 @@ class _ShopSwitcherContentState extends State<_ShopSwitcherContent>
                 itemBuilder: (_, index) {
                   final shop = shops[index];
                   final shopId = shop['id'];
-                  final shopName = shop['name'];
-                  final shopLogo = shop['logo'];
-                  final shopCategory = shop['category'];
 
-                  final currentShopId = currentShopModel != null
-                      ? currentShopModel!.shopId
-                      : shopId;
-                  final isCounterVisible = currentShopModel != null
-                      ? true
-                      : false;
+                  return FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('shops')
+                        .doc(shopId)
+                        .get(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return shimmerPlaceholder(
+                          height: 80,
+                          width: double.infinity,
+                        ); // loading shimmer
+                      }
 
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    tileColor: currentShopModel == null
-                        ? Colors.grey[100]
-                        : currentShopModel!.shopId == shopId
-                        ? secondaryColor
-                        : Colors.grey[100],
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(100),
-                      child: CachedNetworkImage(
-                        imageUrl: shopLogo ?? currentUserModel.profilePicture,
-                        progressIndicatorBuilder: (_, __, ___) =>
-                            shimmerPlaceholder(
-                              height: 60,
-                              width: 60,
-                              radius: 100,
+                      if (!snapshot.data!.exists) {
+                        return const SizedBox.shrink(); // skip if shop not found
+                      }
+
+                      final shopData =
+                          snapshot.data!.data() as Map<String, dynamic>;
+                      final shopModel = ShopModel.fromJson(shopData);
+
+                      final isCurrentShop =
+                          currentShopModel != null &&
+                          currentShopModel!.shopId == shopId;
+
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        tileColor: isCurrentShop
+                            ? secondaryColor
+                            : Colors.grey[100],
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(100),
+                          child: CachedNetworkImage(
+                            imageUrl: shopModel.shopLogoUrl,
+                            progressIndicatorBuilder: (_, __, ___) =>
+                                shimmerPlaceholder(
+                                  height: 60,
+                                  width: 60,
+                                  radius: 100,
+                                ),
+                            height: 60,
+                            width: 60,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        title: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              shopModel.shopName,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                color: isCurrentShop ? primaryColor : textColor,
+                              ),
                             ),
-                        height: 60,
-                        width: 60,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          shopName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            color: currentShopModel == null
-                                ? textColor
-                                : currentShopModel!.shopId == shopId
-                                ? primaryColor
-                                : textColor,
-                          ),
+                            Text(
+                              '${S.of(context).category}: ${shopModel.shopCategory}',
+                              style: TextStyle(
+                                color: isCurrentShop ? primaryColor : textColor,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          '${S.of(context).category}: $shopCategory',
-                          style: TextStyle(
-                            color: currentShopModel == null
-                                ? textColor
-                                : currentShopModel!.shopId == shopId
-                                ? primaryColor
-                                : textColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                    trailing: Builder(
-                      builder: (context) {
-                        final isCurrentShop =
-                            currentShopModel != null &&
-                            currentShopModel!.shopId == shopId;
+                        trailing: Builder(
+                          builder: (context) {
+                            if (isCurrentShop) {
+                              return Icon(
+                                Icons.check_circle_rounded,
+                                color: primaryColor,
+                              );
+                            }
 
-                        // Show check icon if this is the current shop
-                        if (isCurrentShop) {
-                          return Icon(
-                            Icons.check_circle_rounded,
-                            color: primaryColor,
-                          );
-                        }
+                            // ✅ Your existing logic for unseen messages & orders
+                            return StreamBuilder<int>(
+                              stream: ChatsCubit.instance
+                                  .getTotalUnseenMessagesCount(uId),
+                              builder: (context, chatSnapshot) {
+                                final chatCount = chatSnapshot.data ?? 0;
 
-                        // Otherwise, show counter + forward arrow
-                        return StreamBuilder<int>(
-                          stream: ChatsCubit.instance
-                              .getTotalUnseenMessagesCount(uId),
-                          builder: (context, chatSnapshot) {
-                            final chatCount = chatSnapshot.data ?? 0;
+                                return StreamBuilder<QuerySnapshot>(
+                                  stream: FirebaseFirestore.instance
+                                      .collection('orders')
+                                      .where('shopId', isEqualTo: shopId)
+                                      .where(
+                                        'orderStatus',
+                                        whereIn: [
+                                          OrderStatus.pending.index,
+                                          OrderStatus.accepted.index,
+                                          OrderStatus.shipped.index,
+                                        ],
+                                      )
+                                      .snapshots(),
+                                  builder: (context, orderSnapshot) {
+                                    int totalProducts = 0;
+                                    if (orderSnapshot.hasData) {
+                                      for (var doc
+                                          in orderSnapshot.data!.docs) {
+                                        final products =
+                                            doc['products'] as List<dynamic>? ??
+                                            [];
+                                        totalProducts += products.length;
+                                      }
+                                    }
 
-                            return StreamBuilder<QuerySnapshot>(
-                              stream: FirebaseFirestore.instance
-                                  .collection('orders')
-                                  .where('shopId', isEqualTo: shopId)
-                                  .where(
-                                    'orderStatus',
-                                    whereIn: [
-                                      OrderStatus.pending.index,
-                                      OrderStatus.accepted.index,
-                                      OrderStatus.shipped.index,
-                                    ],
-                                  )
-                                  .snapshots(),
-                              builder: (context, orderSnapshot) {
-                                int totalProducts = 0;
-                                if (orderSnapshot.hasData) {
-                                  for (var doc in orderSnapshot.data!.docs) {
-                                    final products =
-                                        doc['products'] as List<dynamic>? ?? [];
-                                    totalProducts += products.length;
-                                  }
-                                }
+                                    final totalCount =
+                                        totalProducts + chatCount;
 
-                                final totalCount = totalProducts + chatCount;
-
-                                return Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Show counter if > 0
-                                    if (totalCount > 0)
-                                      CircleAvatar(
-                                        backgroundColor: Colors.red,
-                                        radius: 12,
-                                        child: Text(
-                                          totalCount > 99
-                                              ? '+99'
-                                              : '$totalCount',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white,
+                                    return Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (totalCount > 0)
+                                          CircleAvatar(
+                                            backgroundColor: Colors.red,
+                                            radius: 12,
+                                            child: Text(
+                                              totalCount > 99
+                                                  ? '+99'
+                                                  : '$totalCount',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.white,
+                                              ),
+                                            ),
                                           ),
+                                        Icon(
+                                          forwardIcon(),
+                                          color: textColor.withOpacity(0.7),
                                         ),
-                                      ),
-                                    Icon(
-                                      forwardIcon(),
-                                      color: textColor.withOpacity(0.7),
-                                    ),
-                                  ],
+                                      ],
+                                    );
+                                  },
                                 );
                               },
                             );
                           },
-                        );
-                      },
-                    ),
-                    onTap: () => _switchToShop(shopId),
+                        ),
+                        onTap: () => _switchToShop(shopId),
+                      );
+                    },
                   );
                 },
               ),
@@ -940,7 +951,8 @@ class ActionButton extends StatelessWidget {
   final bool isOutlined;
   final Color? borderColor;
 
-  const ActionButton({super.key, 
+  const ActionButton({
+    super.key,
     required this.onTap,
     required this.child,
     required this.color,

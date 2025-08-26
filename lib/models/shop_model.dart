@@ -153,6 +153,21 @@ extension ShopModelCopyWith on ShopModel {
   }
 }
 
+extension ShopModelX on ShopModel {
+  void updateFrom(ShopModel other) {
+    shopName = other.shopName;
+    shopCategory = other.shopCategory;
+    shopDescription = other.shopDescription;
+    deliveryDays = other.deliveryDays;
+    avgResponseTime = other.avgResponseTime;
+    sellerLicenseNumber = other.sellerLicenseNumber;
+    autoAcceptOrders = other.autoAcceptOrders;
+    shopLogoUrl = other.shopLogoUrl;
+    shopBannerUrl = other.shopBannerUrl;
+    sellerLicenseImageUrl = other.sellerLicenseImageUrl;
+  }
+}
+
 // import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:matajer/constants/functions.dart';
 //

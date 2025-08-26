@@ -1,11 +1,13 @@
-import 'dart:developer';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:matajer/constants/cache_helper.dart';
+import 'package:matajer/constants/colors.dart';
 import 'package:matajer/constants/vars.dart';
-import 'package:matajer/cubit/user/user_cubit.dart';
 import 'package:matajer/models/shop_model.dart';
 
 class ManageShopPage extends StatefulWidget {
@@ -27,17 +29,18 @@ class _ManageShopPageState extends State<ManageShopPage> {
   late TextEditingController avgResponseTimeController;
   late TextEditingController licenseNumberController;
 
+  bool autoAcceptOrders = false;
+
   File? newLogoFile;
   File? newBannerFile;
   File? newLicenseFile;
 
-  bool autoAcceptOrders = false;
-  ShopActivityStatus activityStatus = ShopActivityStatus.online;
+  bool hasChanges = false;
 
   @override
   void initState() {
     super.initState();
-    final shop = currentShopModel!;
+    final shop = widget.shopModel;
 
     shopNameController = TextEditingController(text: shop.shopName);
     shopCategoryController = TextEditingController(text: shop.shopCategory);
@@ -55,106 +58,145 @@ class _ManageShopPageState extends State<ManageShopPage> {
     );
 
     autoAcceptOrders = shop.autoAcceptOrders;
-    activityStatus = shop.activityStatus;
   }
 
-  @override
-  void dispose() {
-    shopNameController.dispose();
-    shopCategoryController.dispose();
-    shopDescriptionController.dispose();
-    deliveryDaysController.dispose();
-    avgResponseTimeController.dispose();
-    licenseNumberController.dispose();
-    super.dispose();
+  void checkForChanges() {
+    final shop = widget.shopModel;
+    setState(() {
+      hasChanges =
+          shopNameController.text.trim() != shop.shopName ||
+          shopCategoryController.text.trim() != shop.shopCategory ||
+          shopDescriptionController.text.trim() != shop.shopDescription ||
+          deliveryDaysController.text.trim() != shop.deliveryDays.toString() ||
+          avgResponseTimeController.text.trim() !=
+              shop.avgResponseTime.toString() ||
+          licenseNumberController.text.trim() !=
+              shop.sellerLicenseNumber.toString() ||
+          autoAcceptOrders != shop.autoAcceptOrders ||
+          newLogoFile != null ||
+          newBannerFile != null ||
+          newLicenseFile != null;
+    });
   }
 
-  Future<void> pickImage(ImageSource source, String type) async {
+  Future<void> pickImage(String type) async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: source, imageQuality: 70);
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+
     if (picked != null) {
       setState(() {
         if (type == 'logo') newLogoFile = File(picked.path);
         if (type == 'banner') newBannerFile = File(picked.path);
         if (type == 'license') newLicenseFile = File(picked.path);
       });
+      checkForChanges();
     }
+  }
+
+  Future<String> uploadFile(File file, String path) async {
+    final ref = FirebaseStorage.instance.ref().child(path);
+    await ref.putFile(file);
+    return await ref.getDownloadURL();
   }
 
   Future<void> saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      final shopDoc = FirebaseFirestore.instance
-          .collection('shops')
-          .doc(currentShopModel!.shopId);
-
-      // Upload new images if selected
-      String logoUrl = currentShopModel!.shopLogoUrl;
-      String bannerUrl = currentShopModel!.shopBannerUrl;
-      String licenseUrl = currentShopModel!.sellerLicenseImageUrl;
+      String logoUrl = widget.shopModel.shopLogoUrl;
+      String bannerUrl = widget.shopModel.shopBannerUrl;
+      String licenseUrl = widget.shopModel.sellerLicenseImageUrl;
 
       if (newLogoFile != null) {
-        logoUrl = await UserCubit.get(context).uploadImage(
-          image: XFile(newLogoFile!.path),
-          docId: shopDoc.id,
-          imageName: 'shopLogo',
+        logoUrl = await uploadFile(
+          newLogoFile!,
+          "shops/${widget.shopModel.shopId}/logo.jpg",
         );
       }
       if (newBannerFile != null) {
-        bannerUrl = await UserCubit.get(context).uploadImage(
-          image: XFile(newBannerFile!.path),
-          docId: shopDoc.id,
-          imageName: 'shopBanner',
+        bannerUrl = await uploadFile(
+          newBannerFile!,
+          "shops/${widget.shopModel.shopId}/banner.jpg",
         );
       }
       if (newLicenseFile != null) {
-        licenseUrl = await UserCubit.get(context).uploadImage(
-          image: XFile(newLicenseFile!.path),
-          docId: shopDoc.id,
-          imageName: 'sellerLicense',
+        licenseUrl = await uploadFile(
+          newLicenseFile!,
+          "shops/${widget.shopModel.shopId}/license.jpg",
         );
       }
 
-      final updatedShop = currentShopModel!.copyWith(
+      // build updated model
+      final updatedShop = widget.shopModel.copyWith(
         shopName: shopNameController.text.trim(),
         shopCategory: shopCategoryController.text.trim(),
         shopDescription: shopDescriptionController.text.trim(),
-        deliveryDays: num.tryParse(deliveryDaysController.text.trim()) ?? 0,
-        avgResponseTime:
-            num.tryParse(avgResponseTimeController.text.trim()) ?? 0,
-        sellerLicenseNumber:
-            num.tryParse(licenseNumberController.text.trim()) ?? 0,
+        deliveryDays: int.tryParse(deliveryDaysController.text) ?? 0,
+        avgResponseTime: int.tryParse(avgResponseTimeController.text) ?? 0,
+        sellerLicenseNumber: num.parse(licenseNumberController.text.trim()),
+        autoAcceptOrders: autoAcceptOrders,
         shopLogoUrl: logoUrl,
         shopBannerUrl: bannerUrl,
         sellerLicenseImageUrl: licenseUrl,
-        autoAcceptOrders: autoAcceptOrders,
-        activityStatus: activityStatus,
       );
 
-      await shopDoc.update(updatedShop.toMap());
+      // update Firestore
+      await FirebaseFirestore.instance
+          .collection('shops')
+          .doc(widget.shopModel.shopId)
+          .update(updatedShop.toMap());
 
+      // ✅ Update both global and local state
+      setState(() {
+        currentShopModel = updatedShop; // global variable (from vars.dart)
+        widget.shopModel.updateFrom(updatedShop); // optional sync helper
+        hasChanges = false;
+        newLogoFile = null;
+        newBannerFile = null;
+        newLicenseFile = null;
+      });
+
+      // ✅ Optionally persist locally in cache
+      await CacheHelper.saveData(
+        key: 'currentShopModel',
+        value: jsonEncode(updatedShop.toMap()),
+      );
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Shop updated successfully!'),
-          backgroundColor: Colors.green,
-        ),
+        const SnackBar(content: Text("Shop details updated successfully!")),
       );
     } catch (e) {
-      log('ManageShopPage Error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update shop: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error updating shop: $e")));
     }
+  }
+
+  Widget buildImagePreview(String url, File? file, String type) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: () => pickImage(type),
+          child: CircleAvatar(
+            radius: 40,
+            backgroundImage: file != null
+                ? FileImage(file)
+                : NetworkImage(url) as ImageProvider,
+          ),
+        ),
+        Text(type.toUpperCase()),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final shop = widget.shopModel;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Shop'), centerTitle: true),
+      appBar: AppBar(title: const Text("Manage Shop")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -163,138 +205,82 @@ class _ManageShopPageState extends State<ManageShopPage> {
             children: [
               // Images
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  InkWell(
-                    onTap: () => pickImage(ImageSource.gallery, 'logo'),
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundImage: newLogoFile != null
-                          ? FileImage(newLogoFile!)
-                          : NetworkImage(currentShopModel!.shopLogoUrl)
-                                as ImageProvider,
-                    ),
+                  buildImagePreview(shop.shopLogoUrl, newLogoFile, 'logo'),
+                  buildImagePreview(
+                    shop.shopBannerUrl,
+                    newBannerFile,
+                    'banner',
                   ),
-                  InkWell(
-                    onTap: () => pickImage(ImageSource.gallery, 'banner'),
-                    child: Container(
-                      width: 120,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: newBannerFile != null
-                              ? FileImage(newBannerFile!)
-                              : NetworkImage(currentShopModel!.shopBannerUrl)
-                                    as ImageProvider,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () => pickImage(ImageSource.gallery, 'license'),
-                    child: Container(
-                      width: 60,
-                      height: 60,
-                      color: Colors.grey[300],
-                      child: newLicenseFile != null
-                          ? Image.file(newLicenseFile!, fit: BoxFit.cover)
-                          : Image.network(
-                              currentShopModel!.sellerLicenseImageUrl,
-                            ),
-                    ),
+                  buildImagePreview(
+                    shop.sellerLicenseImageUrl,
+                    newLicenseFile,
+                    'license',
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-              // Shop Name
+              // Text Fields
               TextFormField(
                 controller: shopNameController,
-                decoration: const InputDecoration(labelText: 'Shop Name'),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                decoration: const InputDecoration(labelText: "Shop Name"),
+                validator: (v) => v == null || v.isEmpty ? "Required" : null,
+                onChanged: (_) => checkForChanges(),
               ),
-              const SizedBox(height: 10),
-
-              // Shop Category
               TextFormField(
                 controller: shopCategoryController,
-                decoration: const InputDecoration(labelText: 'Shop Category'),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                decoration: const InputDecoration(labelText: "Category"),
+                validator: (v) => v == null || v.isEmpty ? "Required" : null,
+                onChanged: (_) => checkForChanges(),
               ),
-              const SizedBox(height: 10),
-
-              // Shop Description
               TextFormField(
                 controller: shopDescriptionController,
+                decoration: const InputDecoration(labelText: "Description"),
+                onChanged: (_) => checkForChanges(),
+              ),
+              TextFormField(
+                controller: deliveryDaysController,
+                decoration: const InputDecoration(labelText: "Delivery Days"),
+                keyboardType: TextInputType.number,
+                onChanged: (_) => checkForChanges(),
+              ),
+              TextFormField(
+                controller: avgResponseTimeController,
                 decoration: const InputDecoration(
-                  labelText: 'Shop Description',
+                  labelText: "Avg Response Time (mins)",
                 ),
-                maxLines: 3,
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                keyboardType: TextInputType.number,
+                onChanged: (_) => checkForChanges(),
               ),
-              const SizedBox(height: 10),
-
-              // Delivery Days & Avg Response Time
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: deliveryDaysController,
-                      decoration: const InputDecoration(
-                        labelText: 'Delivery Days',
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextFormField(
-                      controller: avgResponseTimeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Avg Response Time',
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              // License Number
               TextFormField(
                 controller: licenseNumberController,
-                decoration: const InputDecoration(labelText: 'License Number'),
-                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "License Number"),
+                onChanged: (_) => checkForChanges(),
               ),
-              const SizedBox(height: 10),
 
-              // Auto Accept Orders Toggle
+              const SizedBox(height: 16),
+
+              // Toggles
               SwitchListTile(
-                title: const Text('Auto Accept Orders'),
+                title: const Text("Auto Accept Orders"),
                 value: autoAcceptOrders,
-                onChanged: (v) => setState(() => autoAcceptOrders = v),
-              ),
-
-              // Activity Status
-              DropdownButtonFormField<ShopActivityStatus>(
-                value: activityStatus,
-                items: ShopActivityStatus.values
-                    .map(
-                      (e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(e.name.toUpperCase()),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (v) => setState(() => activityStatus = v!),
-                decoration: const InputDecoration(labelText: 'Activity Status'),
+                onChanged: (val) {
+                  setState(() => autoAcceptOrders = val);
+                  checkForChanges();
+                },
               ),
 
               const SizedBox(height: 20),
+
+              // Save button
               ElevatedButton(
-                onPressed: saveChanges,
-                child: const Text('Save Changes'),
+                onPressed: hasChanges ? saveChanges : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: hasChanges ? primaryColor : Colors.grey,
+                ),
+                child: const Text("Save Changes"),
               ),
             ],
           ),

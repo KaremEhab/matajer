@@ -11,6 +11,7 @@ import 'package:matajer/cubit/chat/chat_cubit.dart';
 import 'package:matajer/cubit/user/user_cubit.dart';
 import 'package:matajer/generated/l10n.dart';
 import 'package:matajer/models/order_model.dart';
+import 'package:matajer/models/shop_model.dart';
 import 'package:matajer/screens/auth/login.dart';
 import 'package:matajer/screens/auth/register_as_seller.dart';
 import 'package:matajer/screens/auth/signup.dart';
@@ -232,103 +233,111 @@ class ShopManagement extends StatelessWidget {
   }
 }
 
-Widget buildShopTile(BuildContext context, Map<String, dynamic> shop) {
-  final shopId = shop['id'];
-  final shopName = shop['name'];
-  final shopLogo = shop['logo'];
-  final shopCategory = shop['category'];
+Widget buildShopTile(BuildContext context, String shopId) {
+  final isCurrentShop =
+      currentShopModel != null && currentShopModel!.shopId == shopId;
 
-  return ListTile(
-    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-    tileColor: Colors.grey[100],
-    leading: ClipRRect(
-      borderRadius: BorderRadius.circular(100.r),
-      child: CachedNetworkImage(
-        imageUrl: shopLogo ?? currentUserModel.profilePicture,
-        progressIndicatorBuilder: (_, __, ___) =>
-            shimmerPlaceholder(height: 60, width: 60, radius: 100.r),
-        height: 60,
-        width: 60,
-        fit: BoxFit.cover,
-      ),
-    ),
-    title: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(shopName, style: const TextStyle(fontWeight: FontWeight.w900)),
-        Text('${S.of(context).category}: $shopCategory'),
-      ],
-    ),
-    trailing: SizedBox(
-      width: 65.w,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          StreamBuilder<int>(
-            stream: ChatsCubit.instance.getTotalUnseenMessagesCount(uId),
-            builder: (context, chatSnapshot) {
-              final chatCount = chatSnapshot.data ?? 0;
+  return FutureBuilder<DocumentSnapshot>(
+    future: FirebaseFirestore.instance.collection('shops').doc(shopId).get(),
+    builder: (context, snapshot) {
+      if (!snapshot.hasData) {
+        return shimmerPlaceholder(height: 80, width: double.infinity);
+      }
 
-              return StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('orders')
-                    .where('shopId', isEqualTo: shopId)
-                    .where(
-                      'orderStatus',
-                      whereIn: [
-                        OrderStatus.pending.index,
-                        OrderStatus.accepted.index,
-                        OrderStatus.shipped.index,
-                        // add any other non-delivered statuses
-                      ],
-                    )
-                    .snapshots(),
-                builder: (context, orderSnapshot) {
-                  int totalProducts = 0;
+      if (!snapshot.data!.exists) {
+        return const SizedBox.shrink(); // skip if shop not found
+      }
 
-                  if (orderSnapshot.hasData) {
-                    for (var doc in orderSnapshot.data!.docs) {
-                      final products = doc['products'] as List<dynamic>? ?? [];
-                      totalProducts += products.length;
-                    }
-                  }
+      final shopData = snapshot.data!.data() as Map<String, dynamic>;
+      final shopModel = ShopModel.fromJson(shopData);
 
-                  final totalCount = totalProducts + chatCount;
-
-                  if (totalCount > 0) {
-                    return CircleAvatar(
-                      backgroundColor: Colors.red,
-                      radius: 12,
-                      child: Text(
-                        totalCount > 99 ? '+99' : '$totalCount',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
-                  }
-
-                  return Icon(
-                    forwardIcon(),
-                    color: primaryColor.withOpacity(0.7),
-                  );
-                },
-              );
-            },
+      return ListTile(
+        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        tileColor: isCurrentShop ? secondaryColor : Colors.grey[100],
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(100),
+          child: CachedNetworkImage(
+            imageUrl: shopModel.shopLogoUrl.isNotEmpty
+                ? shopModel.shopLogoUrl
+                : currentUserModel.profilePicture!,
+            progressIndicatorBuilder: (_, __, ___) =>
+                shimmerPlaceholder(height: 60, width: 60, radius: 100),
+            height: 60,
+            width: 60,
+            fit: BoxFit.cover,
           ),
-          Icon(forwardIcon()),
-        ],
-      ),
-    ),
-    onTap: () async {
-      await UserCubit.get(context).getShopById(shopId);
-      Navigator.pop(context);
-      isSeller = true;
-      navigateAndFinish(
-        context: context,
-        screen: const Layout(getUserData: false),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              shopModel.shopName,
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                color: isCurrentShop ? primaryColor : textColor,
+              ),
+            ),
+            Text(
+              '${S.of(context).category}: ${shopModel.shopCategory}',
+              style: TextStyle(color: isCurrentShop ? primaryColor : textColor),
+            ),
+          ],
+        ),
+        trailing: StreamBuilder<int>(
+          stream: ChatsCubit.instance.getTotalUnseenMessagesCount(uId),
+          builder: (context, chatSnapshot) {
+            final chatCount = chatSnapshot.data ?? 0;
+
+            return StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('orders')
+                  .where('shopId', isEqualTo: shopId)
+                  .where(
+                    'orderStatus',
+                    whereIn: [
+                      OrderStatus.pending.index,
+                      OrderStatus.accepted.index,
+                      OrderStatus.shipped.index,
+                    ],
+                  )
+                  .snapshots(),
+              builder: (context, orderSnapshot) {
+                int totalProducts = 0;
+                if (orderSnapshot.hasData) {
+                  for (var doc in orderSnapshot.data!.docs) {
+                    final products = doc['products'] as List<dynamic>? ?? [];
+                    totalProducts += products.length;
+                  }
+                }
+
+                final totalCount = totalProducts + chatCount;
+
+                if (totalCount > 0) {
+                  return CircleAvatar(
+                    backgroundColor: Colors.red,
+                    radius: 12,
+                    child: Text(
+                      totalCount > 99 ? '+99' : '$totalCount',
+                      style: const TextStyle(fontSize: 12, color: Colors.white),
+                    ),
+                  );
+                }
+
+                return Icon(forwardIcon(), color: textColor.withOpacity(0.7));
+              },
+            );
+          },
+        ),
+        onTap: () async {
+          await UserCubit.get(context).getShopById(shopId);
+          Navigator.pop(context);
+          isSeller = true;
+          navigateAndFinish(
+            context: context,
+            screen: const Layout(getUserData: false),
+          );
+        },
       );
     },
   );
@@ -350,7 +359,8 @@ Future<void> showShopSelectionSheet(BuildContext context) async {
         separatorBuilder: (_, __) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
           final shop = currentUserModel.shops[index];
-          return buildShopTile(context, shop);
+          final shopId = shop['id'];
+          return buildShopTile(context, shopId);
         },
       ),
     ),

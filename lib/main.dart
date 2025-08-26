@@ -24,6 +24,7 @@ import 'package:matajer/models/order_model.dart';
 import 'package:matajer/models/product_model.dart';
 import 'package:matajer/models/shop_model.dart';
 import 'package:matajer/screens/home/product_details.dart';
+import 'package:matajer/screens/home/shop/shop_comments.dart';
 import 'package:matajer/screens/orders/order_details_screen.dart';
 import 'package:matajer/screens/profile/order_details.dart';
 import 'package:matajer/screens/reviews/reviews.dart';
@@ -98,6 +99,54 @@ Future<void> setupFlutterNotifications() async {
       }
     },
   );
+
+  // 👇 Listen to FCM messages
+  FirebaseMessaging.onMessage.listen(showLocalNotification);
+}
+
+Future<void> showLocalNotification(RemoteMessage message) async {
+  final data = message.data;
+  final type = data['type'];
+
+  // 👇 Add reply action ONLY if type == chat
+  final notificationDetails = type == 'chat'
+      ? const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'high_importance_channel',
+            'High Importance Notifications',
+            importance: Importance.high,
+            priority: Priority.high,
+            playSound: true,
+            actions: <AndroidNotificationAction>[
+              AndroidNotificationAction(
+                'reply',
+                'Reply',
+                inputs: [
+                  AndroidNotificationActionInput(label: 'Type message...'),
+                ],
+              ),
+            ],
+          ),
+          iOS: DarwinNotificationDetails(),
+        )
+      : const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'high_importance_channel',
+            'High Importance Notifications',
+            importance: Importance.high,
+            priority: Priority.high,
+            playSound: true,
+          ),
+          iOS: DarwinNotificationDetails(),
+        );
+
+  await flutterLocalNotificationsPlugin.show(
+    0,
+    message.notification?.title,
+    message.notification?.body,
+    notificationDetails,
+    payload: jsonEncode(data),
+  );
 }
 
 void handleNotificationTap(String? payload) {
@@ -144,6 +193,16 @@ void handleNotificationTap(String? payload) {
         );
         navigator.pushReplacementIfNeeded(
           MaterialPageRoute(builder: (_) => Reviews(productModel: product)),
+          shouldReplace,
+        );
+        break;
+
+      case NotificationTypes.comment:
+        final shop = ShopModel.fromJson(
+          Map<String, dynamic>.from(jsonDecodeIfNeeded(data['shopModel'])),
+        );
+        navigator.pushReplacementIfNeeded(
+          MaterialPageRoute(builder: (_) => ShopComments(shopModel: shop)),
           shouldReplace,
         );
         break;
