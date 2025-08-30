@@ -108,239 +108,272 @@ class _SellerHomeState extends State<SellerHome> {
         builder: (context, state) {
           return ConditionalBuilder(
             condition: display,
-            builder: (context) => SingleChildScrollView(
+            builder: (context) => CustomScrollView(
               physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 7),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 20),
-                    Center(
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: primaryColor,
-                          borderRadius: BorderRadius.circular(15.r),
-                          boxShadow: [
-                            BoxShadow(
-                              offset: const Offset(0, 10),
-                              blurRadius: 8,
-                              color: primaryColor.withOpacity(0.5),
+              slivers: [
+                // --- Summary card ---
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 7),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 20),
+                        Center(
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 7,
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 7),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  S.of(context).your_orders_summary,
-                                  style: TextStyle(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
+                            decoration: BoxDecoration(
+                              color: primaryColor,
+                              borderRadius: BorderRadius.circular(15.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  offset: const Offset(0, 10),
+                                  blurRadius: 8,
+                                  color: primaryColor.withOpacity(0.5),
                                 ),
-                                // Icon(
-                                //   Icons.more_horiz_rounded,
-                                //   color: Colors.white,
-                                //   size: 25.h,a
-                                // ),
                               ],
                             ),
-                            SizedBox(height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                SizedBox(height: 7),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      S.of(context).pending_orders,
+                                      S.of(context).your_orders_summary,
                                       style: TextStyle(
-                                        fontSize: 18.sp,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.white.withOpacity(0.6),
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
                                       ),
                                     ),
-                                    Row(
+                                    // Icon(
+                                    //   Icons.more_horiz_rounded,
+                                    //   color: Colors.white,
+                                    //   size: 25.h,a
+                                    // ),
+                                  ],
+                                ),
+                                SizedBox(height: 20),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.end,
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          OrderCubit.get(
-                                            context,
-                                          ).pendingOrdersCount.toString(),
+                                          S.of(context).pending_orders,
                                           style: TextStyle(
-                                            fontSize: 50.sp,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.white,
+                                            fontSize: 18.sp,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.white.withOpacity(
+                                              0.6,
+                                            ),
                                           ),
                                         ),
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              OrderCubit.get(
+                                                context,
+                                              ).pendingOrdersCount.toString(),
+                                              style: TextStyle(
+                                                fontSize: 50.sp,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            Text(
+                                              OrderCubit.get(
+                                                        context,
+                                                      ).pendingOrdersCount >
+                                                      1
+                                                  ? S.of(context).orders
+                                                  : S.of(context).order,
+                                              style: TextStyle(
+                                                height: 2.5,
+                                                fontSize: 20.sp,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
                                         Text(
-                                          OrderCubit.get(
-                                                    context,
-                                                  ).pendingOrdersCount >
-                                                  1
-                                              ? S.of(context).orders
-                                              : S.of(context).order,
+                                          S.of(context).fulfilled_orders,
                                           style: TextStyle(
-                                            height: 2.5,
-                                            fontSize: 20.sp,
-                                            color: Colors.white,
+                                            fontSize: 18.sp,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.white.withOpacity(
+                                              0.6,
+                                            ),
                                           ),
+                                        ),
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              OrderCubit.get(
+                                                context,
+                                              ).fulfilledOrdersCount.toString(),
+                                              style: TextStyle(
+                                                fontSize: 50.sp,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            Text(
+                                              OrderCubit.get(
+                                                        context,
+                                                      ).fulfilledOrdersCount >
+                                                      1
+                                                  ? S.of(context).orders
+                                                  : S.of(context).order,
+                                              style: TextStyle(
+                                                height: 2.6,
+                                                fontSize: 20.sp,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
                                   ],
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      S.of(context).fulfilled_orders,
-                                      style: TextStyle(
-                                        fontSize: 18.sp,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.white.withOpacity(0.6),
-                                      ),
-                                    ),
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          OrderCubit.get(
-                                            context,
-                                          ).fulfilledOrdersCount.toString(),
-                                          style: TextStyle(
-                                            fontSize: 50.sp,
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        Text(
-                                          OrderCubit.get(
-                                                    context,
-                                                  ).fulfilledOrdersCount >
-                                                  1
-                                              ? S.of(context).orders
-                                              : S.of(context).order,
-                                          style: TextStyle(
-                                            height: 2.6,
-                                            fontSize: 20.sp,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                SizedBox(height: 10),
                               ],
                             ),
-                            SizedBox(height: 10),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 25),
-                    Text(
-                      S.of(context).your_orders,
-                      style: TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                        color: textColor,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    BlocBuilder<ProductCubit, ProductState>(
-                      builder: (context, state) {
-                        final activeCount = OrderCubit.get(
-                          context,
-                        ).activeOrders.length;
-                        final fulfilledCount = OrderCubit.get(
-                          context,
-                        ).historyOrders.length;
-                        return SizedBox(
-                          height: 50,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: Material(
-                                  color: selectedTab == 0
-                                      ? primaryColor
-                                      : lightGreyColor.withOpacity(0.4),
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(12.r),
-                                    onTap: () {
-                                      selectedTab = 0;
-                                      displayOrders = false;
-                                      OrderCubit.get(
-                                        context,
-                                      ).getSellerActiveOrders();
-                                    },
-                                    child: Center(
-                                      child: Text(
-                                        "${S.of(context).active} ${OrderCubit.get(context).activeOrdersCount}",
-                                        style: TextStyle(
-                                          fontSize: 19,
-                                          fontWeight: FontWeight.w700,
-                                          color: selectedTab == 0
-                                              ? Colors.white
-                                              : greyColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 10),
-                              Expanded(
-                                child: Material(
-                                  color: selectedTab == 1
-                                      ? primaryColor
-                                      : lightGreyColor.withOpacity(0.4),
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(12.r),
-                                    onTap: () {
-                                      selectedTab = 1;
-                                      displayOrders = false;
-                                      OrderCubit.get(
-                                        context,
-                                      ).getSellerHistoryOrders();
-                                    },
-                                    child: Center(
-                                      child: Text(
-                                        "${S.of(context).history} ${OrderCubit.get(context).fulfilledOrdersCount}",
-                                        style: TextStyle(
-                                          fontSize: 19,
-                                          fontWeight: FontWeight.w700,
-                                          color: selectedTab == 1
-                                              ? Colors.white
-                                              : greyColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
                           ),
-                        );
-                      },
+                        ),
+                        const SizedBox(height: 25),
+                        Text(
+                          S.of(context).your_orders,
+                          style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            color: textColor,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                      ],
                     ),
-                    Center(
+                  ),
+                ),
+
+                // --- Sticky Active / History buttons ---
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _StickyHeaderDelegate(
+                    height: 60, // must match child height
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: BlocBuilder<ProductCubit, ProductState>(
+                        builder: (context, state) {
+                          final activeCount = OrderCubit.get(
+                            context,
+                          ).activeOrders.length;
+                          final fulfilledCount = OrderCubit.get(
+                            context,
+                          ).historyOrders.length;
+                          return Container(
+                            color: Colors.white,
+                            height: 50,
+                            padding: EdgeInsets.symmetric(vertical: 5),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Material(
+                                    color: selectedTab == 0
+                                        ? primaryColor
+                                        : lightGreyColor.withOpacity(0.4),
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(12.r),
+                                      onTap: () {
+                                        selectedTab = 0;
+                                        displayOrders = false;
+                                        OrderCubit.get(
+                                          context,
+                                        ).getSellerActiveOrders();
+                                      },
+                                      child: Center(
+                                        child: Text(
+                                          "${S.of(context).active} ${OrderCubit.get(context).activeOrdersCount}",
+                                          style: TextStyle(
+                                            fontSize: 19,
+                                            fontWeight: FontWeight.w700,
+                                            color: selectedTab == 0
+                                                ? Colors.white
+                                                : greyColor,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Material(
+                                    color: selectedTab == 1
+                                        ? primaryColor
+                                        : lightGreyColor.withOpacity(0.4),
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(12.r),
+                                      onTap: () {
+                                        selectedTab = 1;
+                                        displayOrders = false;
+                                        OrderCubit.get(
+                                          context,
+                                        ).getSellerHistoryOrders();
+                                      },
+                                      child: Center(
+                                        child: Text(
+                                          "${S.of(context).history} ${OrderCubit.get(context).fulfilledOrdersCount}",
+                                          style: TextStyle(
+                                            fontSize: 19,
+                                            fontWeight: FontWeight.w700,
+                                            color: selectedTab == 1
+                                                ? Colors.white
+                                                : greyColor,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+
+                // --- Orders list ---
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 7),
+                    child: Center(
                       child: ConditionalBuilder(
                         condition: displayOrders,
                         builder: (context) =>
@@ -374,7 +407,7 @@ class _SellerHomeState extends State<SellerHome> {
 
                                   return Column(
                                     children: [
-                                      SizedBox(height: index == 0 ? 18 : 13),
+                                      SizedBox(height: 13),
                                       Material(
                                         color: lightGreyColor.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(
@@ -706,10 +739,11 @@ class _SellerHomeState extends State<SellerHome> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 100),
-                  ],
+                  ),
                 ),
-              ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
             ),
             fallback: (context) => const Center(
               child: CircularProgressIndicator(color: primaryColor),
@@ -718,5 +752,35 @@ class _SellerHomeState extends State<SellerHome> {
         },
       ),
     );
+  }
+}
+
+class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double height;
+
+  _StickyHeaderDelegate({
+    required this.child,
+    this.height = 50, // <-- Match the SizedBox height
+  });
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return SizedBox(height: height, child: child);
+  }
+
+  @override
+  bool shouldRebuild(covariant _StickyHeaderDelegate oldDelegate) {
+    return oldDelegate.child != child || oldDelegate.height != height;
   }
 }

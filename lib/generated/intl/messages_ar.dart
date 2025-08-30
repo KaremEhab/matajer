@@ -356,6 +356,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "empty_products": MessageLookupByLibrary.simpleMessage(
       "لا يتوفر أي منتجات",
     ),
+    "empty_transactions": MessageLookupByLibrary.simpleMessage(
+      "لا يوجد أي معاملات حاليًا",
+    ),
     "english": MessageLookupByLibrary.simpleMessage("الانجليزية"),
     "enter_address": MessageLookupByLibrary.simpleMessage("أدخل عنوانك الجديد"),
     "enter_password": MessageLookupByLibrary.simpleMessage(
@@ -398,6 +401,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "الطلبات المكتملة",
     ),
     "gender": MessageLookupByLibrary.simpleMessage("الجنس"),
+    "gender_charts": MessageLookupByLibrary.simpleMessage("مخططات الجنس"),
     "get_help": MessageLookupByLibrary.simpleMessage("احصل على المساعدة"),
     "get_started_buyer": MessageLookupByLibrary.simpleMessage("ابدأ كمشتري"),
     "gharbya": MessageLookupByLibrary.simpleMessage("الغربية"),
@@ -475,6 +479,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "license_number_validation": MessageLookupByLibrary.simpleMessage(
       "يرجى إدخال رقم الرخصة",
     ),
+    "liked_by": MessageLookupByLibrary.simpleMessage("أُعجب به"),
     "loading": MessageLookupByLibrary.simpleMessage("جارٍ التحميل..."),
     "loading_delivery": MessageLookupByLibrary.simpleMessage(
       "جارٍ تحميل وقت التوصيل...",
@@ -499,6 +504,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "في متاجر، نسعى لتوفير تجربة تسوق متميزة من خلال الابتكار والموثوقية والخدمات التي تركز على العملاء. من خلال التركيز على الجودة والراحة والثقة، نهدف إلى ربط الناس بالمنتجات التي يحتاجونها، متى وأينما احتاجوها.",
     ),
     "matajer_support": MessageLookupByLibrary.simpleMessage("دعم متاجر"),
+    "men": MessageLookupByLibrary.simpleMessage("الرجال"),
     "mentioned_your_product": MessageLookupByLibrary.simpleMessage(
       "أشار إلى أحد منتجاتك",
     ),
@@ -612,6 +618,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "order_summary": MessageLookupByLibrary.simpleMessage("ملخص الطلب"),
     "ordered": MessageLookupByLibrary.simpleMessage("تم الطلب"),
     "orders": MessageLookupByLibrary.simpleMessage("الطلبات"),
+    "orders_by_status": MessageLookupByLibrary.simpleMessage(
+      "الطلبات حسب الحالة",
+    ),
     "orders_history": MessageLookupByLibrary.simpleMessage("سجل الطلبات"),
     "orders_specifications": MessageLookupByLibrary.simpleMessage(
       "مواصفات الطلبات",
@@ -619,10 +628,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "orders_tip": MessageLookupByLibrary.simpleMessage(
       "احصل على تحديثات عند إجراء طلب جديد أو عند تغيير حالة الطلب",
     ),
+    "orders_trend": MessageLookupByLibrary.simpleMessage("اتجاه الطلبات"),
     "others": MessageLookupByLibrary.simpleMessage("آخرون"),
     "our_mission": MessageLookupByLibrary.simpleMessage("مهمتنا"),
     "our_services": MessageLookupByLibrary.simpleMessage("خدماتنا"),
     "out_stock": MessageLookupByLibrary.simpleMessage("غير متوفر"),
+    "paid": MessageLookupByLibrary.simpleMessage("مدفوع"),
     "password_at_least_char": MessageLookupByLibrary.simpleMessage(
       "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل",
     ),
@@ -690,6 +701,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "pick_image": MessageLookupByLibrary.simpleMessage("اختر صورة"),
     "pieces": MessageLookupByLibrary.simpleMessage("قطعة"),
     "pin": MessageLookupByLibrary.simpleMessage("تثبيت"),
+    "place_order": MessageLookupByLibrary.simpleMessage("إتمام الطلب"),
     "please_enter_a_valid_full_name": MessageLookupByLibrary.simpleMessage(
       "من فضلك أدخل اسمًا كاملاً صالحًا",
     ),
@@ -746,6 +758,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "product_categories": MessageLookupByLibrary.simpleMessage("فئات المنتجات"),
     "product_category": MessageLookupByLibrary.simpleMessage("فئة المنتج"),
+    "product_clicks": MessageLookupByLibrary.simpleMessage("نقرات المنتج"),
     "product_details": MessageLookupByLibrary.simpleMessage("تفاصيل المنتج"),
     "product_id": MessageLookupByLibrary.simpleMessage("معرّف المنتج"),
     "product_images": MessageLookupByLibrary.simpleMessage("صور المنتج"),
@@ -814,11 +827,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "revenue_tip": MessageLookupByLibrary.simpleMessage(
       "المبلغ المُجمع من جميع معاملات الطلبات",
     ),
+    "revenue_trend": MessageLookupByLibrary.simpleMessage("اتجاه الإيرادات"),
     "reviews": MessageLookupByLibrary.simpleMessage("المراجعات"),
     "reviews_tip": MessageLookupByLibrary.simpleMessage(
       "تلقي إشعارات عند ترك العملاء مراجعة على منتجاتك",
     ),
     "sales": MessageLookupByLibrary.simpleMessage("المبيعات"),
+    "sales_trend": MessageLookupByLibrary.simpleMessage("اتجاه المبيعات"),
     "save": MessageLookupByLibrary.simpleMessage("حفظ"),
     "save_changes": MessageLookupByLibrary.simpleMessage("حفظ التغييرات"),
     "save_draft": MessageLookupByLibrary.simpleMessage("حفظ كمسودة؟"),
@@ -853,6 +868,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "نستخدم تقنيات أمان متقدمة لحماية معلوماتك من الوصول غير المصرح به أو الفقد أو سوء الاستخدام أو الكشف.",
     ),
     "see_all": MessageLookupByLibrary.simpleMessage("المزيد"),
+    "see_it_now": MessageLookupByLibrary.simpleMessage("شاهدها الآن"),
     "see_less": MessageLookupByLibrary.simpleMessage("عرض القليل"),
     "see_more": MessageLookupByLibrary.simpleMessage("عرض المزيد"),
     "select": MessageLookupByLibrary.simpleMessage("اختيار"),
@@ -975,10 +991,18 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "title_validation": MessageLookupByLibrary.simpleMessage("يرجى إدخال ملصق"),
     "today": MessageLookupByLibrary.simpleMessage("اليوم"),
+    "top_buyers": MessageLookupByLibrary.simpleMessage("أفضل المشترين"),
+    "top_selling_products": MessageLookupByLibrary.simpleMessage(
+      "المنتجات الأكثر مبيعًا",
+    ),
     "total_amount": MessageLookupByLibrary.simpleMessage("المبلغ الإجمالي"),
     "total_orders": MessageLookupByLibrary.simpleMessage("إجمالي الطلبات"),
     "total_price": MessageLookupByLibrary.simpleMessage("السعر الإجمالي"),
     "total_quantity": MessageLookupByLibrary.simpleMessage("الكمية الإجمالية"),
+    "total_quantity_sold": MessageLookupByLibrary.simpleMessage(
+      "إجمالي الكمية المباعة",
+    ),
+    "total_revenue": MessageLookupByLibrary.simpleMessage("إجمالي الإيرادات"),
     "total_sales": MessageLookupByLibrary.simpleMessage("إجمالي المبيعات"),
     "track_your_order": MessageLookupByLibrary.simpleMessage("تتبع طلبك"),
     "transactions": MessageLookupByLibrary.simpleMessage("المعاملات"),
@@ -1043,12 +1067,14 @@ class MessageLookup extends MessageLookupByLibrary {
       "هناك عدة أسباب قد تؤدي إلى رفض الدفع:\nرصيد غير كافٍ\nمعلومات البطاقة غير صحيحة\nانتهاء صلاحية البطاقة\nمشاكل مع البنك أو مزود الدفع الخاص بك\nحاول التحقق من التفاصيل أو التواصل مع البنك لمزيد من المساعدة.",
     ),
     "withdraw": MessageLookupByLibrary.simpleMessage("سحب"),
+    "women": MessageLookupByLibrary.simpleMessage("النساء"),
     "worldwide_market": MessageLookupByLibrary.simpleMessage("سوق عالمي"),
     "write_message": MessageLookupByLibrary.simpleMessage("اكتب رسالتك..."),
     "write_your_review": MessageLookupByLibrary.simpleMessage("اكتب تقييمك"),
     "wrong_password": MessageLookupByLibrary.simpleMessage(
       "كلمة المرور التي ادخلتها غير صحيحة",
     ),
+    "yearly": MessageLookupByLibrary.simpleMessage("سنوي"),
     "years": MessageLookupByLibrary.simpleMessage("سنوات"),
     "yes": MessageLookupByLibrary.simpleMessage("نعم"),
     "yesterday": MessageLookupByLibrary.simpleMessage("أمس"),

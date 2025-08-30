@@ -1,4 +1,4 @@
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconly/iconly.dart';
@@ -12,6 +12,7 @@ import 'package:matajer/generated/l10n.dart';
 import 'package:matajer/models/product_model.dart';
 import 'package:matajer/models/shop_model.dart';
 import 'package:matajer/product_list_screen.dart';
+import 'package:matajer/screens/home/categories/shop_list_card.dart';
 import 'package:matajer/screens/seller/add_products.dart';
 import 'package:matajer/widgets/clear_dialog.dart';
 
@@ -247,7 +248,7 @@ class _ManageProductsPageState extends State<ManageProductsPage> {
                                     // Product image
                                     Expanded(
                                       // aspectRatio: 1,
-                                      child: product.images.first == null
+                                      child: product.images.isEmpty
                                           ? Center(
                                               child: Icon(
                                                 IconlyLight.image,
@@ -257,10 +258,21 @@ class _ManageProductsPageState extends State<ManageProductsPage> {
                                           : ClipRRect(
                                               borderRadius:
                                                   BorderRadius.circular(12),
-                                              child: Image.network(
-                                                product.images.first,
-                                                fit: BoxFit.cover,
+                                              child: CachedNetworkImage(
+                                                imageUrl: product.images.first,
+                                                progressIndicatorBuilder:
+                                                    (
+                                                      context,
+                                                      url,
+                                                      progress,
+                                                    ) => shimmerPlaceholder(
+                                                      height: double.infinity,
+                                                      width: double.infinity,
+                                                      radius: 12,
+                                                    ),
+                                                height: double.infinity,
                                                 width: double.infinity,
+                                                fit: BoxFit.cover,
                                               ),
                                             ),
                                     ),

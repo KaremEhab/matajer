@@ -622,5 +622,26 @@
   "user": "user",
   "users": "users",
 
-  "offers": "Offers"
+  "offers": "Offers",
+
+  "empty_transactions": "Empty Transactions",
+
+  "top_buyers": "Top Buyers",
+  "paid": "Paid",
+  "men": "Men",
+  "women": "Women",
+  "liked_by": "Liked by",
+  "gender_charts": "Gender Charts",
+  "orders_by_status": "Orders by Status",
+  "product_clicks": "Product Clicks",
+  "top_selling_products": "Top Selling Products",
+  "revenue_trend": "Revenue Trend",
+  "sales_trend": "Sales Trend",
+  "orders_trend": "Orders Trend",
+  "total_revenue": "Total Revenue",
+  "total_quantity_sold": "Total quantity sold",
+  "yearly": "Yearly",
+
+  "place_order": "Place order",
+  "see_it_now": "See it now"
 }

@@ -15,9 +15,10 @@ import 'package:matajer/models/order_model.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OrderDetails extends StatefulWidget {
-  const OrderDetails({super.key, required this.order});
+  const OrderDetails({super.key, required this.order, this.orderStatus});
 
   final OrderModel order;
+  final OrderStatus? orderStatus;
 
   @override
   State<OrderDetails> createState() => _OrderDetailsState();
@@ -75,21 +76,25 @@ class _OrderDetailsState extends State<OrderDetails> {
             forceMaterialTransparency: true,
             leadingWidth: 53,
             leading: Padding(
-              padding: EdgeInsets.fromLTRB(7, 6, 0, 6),
+              padding: EdgeInsets.fromLTRB(
+                lang == 'en' ? 7 : 0,
+                6,
+                lang == 'en' ? 0 : 7,
+                6,
+              ),
               child: Material(
                 color: lightGreyColor.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12.r),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
+                  borderRadius: BorderRadius.circular(12.r),
+                  onTap: () => Navigator.pop(context),
                   child: Center(
                     child: Icon(backIcon(), color: textColor, size: 26),
                   ),
                 ),
               ),
             ),
+
             title: Text(
               S.of(context).order_details,
               style: TextStyle(
@@ -368,512 +373,6 @@ class _OrderDetailsState extends State<OrderDetails> {
               ],
             ),
           ),
-
-          // body: SingleChildScrollView(
-          //   physics: const BouncingScrollPhysics(),
-          //   child: Column(
-          //     spacing: 10,
-          //     crossAxisAlignment: CrossAxisAlignment.start,
-          //     children: [
-          //       SizedBox(height: 0),
-          //       Column(
-          //         children: [
-          //           SizedBox(
-          //             height: 160,
-          //             child: PageView.builder(
-          //               controller: _pageController,
-          //               itemCount: widget.order.products.length,
-          //               physics: const BouncingScrollPhysics(),
-          //               itemBuilder: (context, index) {
-          //                 var product = widget.order.products[index];
-          //                 return Padding(
-          //                   padding: EdgeInsets.only(
-          //                     left: lang == 'ar' ? 7 : 0,
-          //                     right: lang == 'en' ? 7 : 0,
-          //                   ),
-          //                   child: Padding(
-          //                     padding: index == 0
-          //                         ? EdgeInsets.only(left: 7)
-          //                         : EdgeInsets.zero,
-          //                     child: Material(
-          //                       color: lightGreyColor.withOpacity(0.4),
-          //                       borderRadius: BorderRadius.circular(22.r),
-          //                       child: Container(
-          //                         height: 170,
-          //                         width: 0.98.sw,
-          //                         clipBehavior: Clip.antiAliasWithSaveLayer,
-          //                         decoration: BoxDecoration(
-          //                           borderRadius: BorderRadius.circular(22.r),
-          //                           border: Border.all(
-          //                             color: textColor.withOpacity(0.1),
-          //                             strokeAlign: BorderSide.strokeAlignOutside,
-          //                           ),
-          //                         ),
-          //                         child: Row(
-          //                           children: [
-          //                             Expanded(
-          //                               flex: 3,
-          //                               child: Padding(
-          //                                 padding: EdgeInsets.all(10),
-          //                                 child: ClipRRect(
-          //                                   borderRadius: BorderRadius.circular(
-          //                                     20.r,
-          //                                   ),
-          //                                   child: CachedNetworkImage(
-          //                                     imageUrl:
-          //                                         product.product.images.first,
-          //                                     progressIndicatorBuilder:
-          //                                         (
-          //                                           context,
-          //                                           url,
-          //                                           downloadProgress,
-          //                                         ) => Center(
-          //                                           child: SizedBox(
-          //                                             width: 20,
-          //                                             height: 20,
-          //                                             child:
-          //                                                 const CircularProgressIndicator(
-          //                                                   color: primaryColor,
-          //                                                 ),
-          //                                           ),
-          //                                         ),
-          //                                     height: double.infinity,
-          //                                     width: double.infinity,
-          //                                     fit: BoxFit.cover,
-          //                                   ),
-          //                                 ),
-          //                               ),
-          //                             ),
-          //                             Expanded(
-          //                               flex: 4,
-          //                               child: Padding(
-          //                                 padding: const EdgeInsets.only(
-          //                                   right: 15,
-          //                                   left: 5,
-          //                                 ),
-          //                                 child: Column(
-          //                                   mainAxisAlignment:
-          //                                       MainAxisAlignment.center,
-          //                                   crossAxisAlignment:
-          //                                       CrossAxisAlignment.start,
-          //                                   children: [
-          //                                     Flexible(
-          //                                       child: Text(
-          //                                         product.product.title,
-          //                                         maxLines: 2,
-          //                                         overflow: TextOverflow.ellipsis,
-          //                                         style: TextStyle(
-          //                                           fontSize: 18,
-          //                                           fontWeight: FontWeight.w900,
-          //                                           color: textColor,
-          //                                         ),
-          //                                       ),
-          //                                     ),
-          //                                     SizedBox(height: 3),
-          //                                     Text(
-          //                                       'Ordered ${DateFormat.yMMMd().format(widget.order.createdAt.toDate())}',
-          //                                       style: TextStyle(
-          //                                         fontSize: 15,
-          //                                         fontWeight: FontWeight.w500,
-          //                                         color: textColor.withOpacity(0.7),
-          //                                       ),
-          //                                     ),
-          //                                     SizedBox(height: 13),
-          //                                     Row(
-          //                                       mainAxisAlignment:
-          //                                           MainAxisAlignment.spaceBetween,
-          //                                       children: [
-          //                                         Material(
-          //                                           color: orderStatus == 'rejected'
-          //                                               ? Colors.redAccent
-          //                                                     .withOpacity(0.15)
-          //                                               : Colors.greenAccent
-          //                                                     .withOpacity(0.15),
-          //                                           borderRadius:
-          //                                               BorderRadius.circular(6.r),
-          //                                           child: Padding(
-          //                                             padding: EdgeInsets.symmetric(
-          //                                               horizontal: 15,
-          //                                               vertical: 2,
-          //                                             ),
-          //                                             child: Row(
-          //                                               children: [
-          //                                                 Icon(
-          //                                                   IconlyLight.document,
-          //                                                   color:
-          //                                                       orderStatus ==
-          //                                                           'rejected'
-          //                                                       ? Colors.red
-          //                                                       : Colors.green,
-          //                                                   size: 20,
-          //                                                 ),
-          //                                                 SizedBox(width: 3),
-          //                                                 Text(
-          //                                                   orderStatus,
-          //                                                   style: TextStyle(
-          //                                                     fontSize: 12,
-          //                                                     fontWeight:
-          //                                                         FontWeight.w700,
-          //                                                     color:
-          //                                                         orderStatus ==
-          //                                                             'rejected'
-          //                                                         ? Colors.red
-          //                                                         : Colors.green,
-          //                                                   ),
-          //                                                 ),
-          //                                               ],
-          //                                             ),
-          //                                           ),
-          //                                         ),
-          //                                         Flexible(
-          //                                           child: Text(
-          //                                             "Q: ${product.quantity}",
-          //                                             overflow:
-          //                                                 TextOverflow.ellipsis,
-          //                                             style: TextStyle(
-          //                                               fontSize: 15,
-          //                                               fontWeight: FontWeight.w800,
-          //                                               color: textColor,
-          //                                             ),
-          //                                           ),
-          //                                         ),
-          //                                       ],
-          //                                     ),
-          //                                     SizedBox(height: 15),
-          //                                     Text(
-          //                                       "Order id: #${widget.order.id}",
-          //                                       overflow: TextOverflow.ellipsis,
-          //                                       style: TextStyle(
-          //                                         fontSize: 15,
-          //                                         fontWeight: FontWeight.w800,
-          //                                         color: primaryColor,
-          //                                       ),
-          //                                     ),
-          //                                   ],
-          //                                 ),
-          //                               ),
-          //                             ),
-          //                           ],
-          //                         ),
-          //                       ),
-          //                     ),
-          //                   ),
-          //                 );
-          //               },
-          //             ),
-          //           ),
-          //
-          //           if (widget.order.products.length > 1) ...[
-          //             const SizedBox(height: 8),
-          //             SmoothPageIndicator(
-          //               controller: _pageController,
-          //               count: widget.order.products.length,
-          //               effect: WormEffect(
-          //                 dotHeight: 8,
-          //                 dotWidth: 8,
-          //                 activeDotColor: primaryColor,
-          //                 dotColor: Colors.grey.withOpacity(0.4),
-          //               ),
-          //             ),
-          //           ],
-          //         ],
-          //       ),
-          //       SizedBox(height: 0),
-          //       Padding(
-          //         padding: EdgeInsets.symmetric(horizontal: 7),
-          //         child: Text(
-          //           S.of(context).orders_specifications,
-          //           style: TextStyle(
-          //             fontSize: 22,
-          //             fontWeight: FontWeight.w900,
-          //             color: textColor,
-          //           ),
-          //         ),
-          //       ),
-          //       SafeArea(
-          //         child: Center(
-          //           child: Container(
-          //             width: 1.sw,
-          //             margin: EdgeInsets.symmetric(horizontal: 7),
-          //             clipBehavior: Clip.antiAliasWithSaveLayer,
-          //             decoration: BoxDecoration(
-          //               color: Colors.white,
-          //               borderRadius: BorderRadius.circular(22.r),
-          //               border: Border.all(
-          //                 color: textColor.withOpacity(0.1),
-          //                 strokeAlign: BorderSide.strokeAlignOutside,
-          //               ),
-          //             ),
-          //             child: Padding(
-          //               padding: EdgeInsets.symmetric(horizontal: 15, vertical: 20),
-          //               child: Column(
-          //                 crossAxisAlignment: CrossAxisAlignment.start,
-          //                 children: [
-          //                   Text(
-          //                     S.of(context).location,
-          //                     style: TextStyle(
-          //                       fontSize: 20,
-          //                       fontWeight: FontWeight.w700,
-          //                       color: textColor,
-          //                     ),
-          //                   ),
-          //                   SizedBox(height: 5),
-          //                   Row(
-          //                     children: [
-          //                       Icon(
-          //                         IconlyBold.location,
-          //                         color: primaryColor,
-          //                         size: 18,
-          //                       ),
-          //                       SizedBox(width: 5),
-          //                       Text(
-          //                         widget.order.buyerAddress,
-          //                         style: TextStyle(
-          //                           fontSize: 16,
-          //                           color: primaryColor,
-          //                           fontWeight: FontWeight.w600,
-          //                         ),
-          //                       ),
-          //                     ],
-          //                   ),
-          //                   // SizedBox(height: 10),
-          //                   // Text(
-          //                   //   S.of(context).order_details,
-          //                   //   style: TextStyle(
-          //                   //     fontSize: 20,
-          //                   //     fontWeight: FontWeight.w700,
-          //                   //     color: textColor,
-          //                   //   ),
-          //                   // ),
-          //                   SizedBox(height: 10),
-          //                   if (widget.order.products.first.product.description !=
-          //                       '')
-          //                     CustomExpandableRichText(
-          //                       textWidth: double.infinity,
-          //                       textHeight: 1.1,
-          //                       fontWeight: FontWeight.w400,
-          //                       maxLines: 4,
-          //                       text:
-          //                           widget.order.products.first.product.description,
-          //                     ),
-          //                   Padding(
-          //                     padding: EdgeInsets.symmetric(vertical: 10),
-          //                     child: Divider(
-          //                       color: greyColor.withOpacity(0.15),
-          //                       thickness: 3,
-          //                     ),
-          //                   ),
-          //                   Text(
-          //                     S.of(context).price_breakdown,
-          //                     style: TextStyle(
-          //                       fontSize: 20,
-          //                       color: textColor,
-          //                       fontWeight: FontWeight.w700,
-          //                     ),
-          //                   ),
-          //                   SizedBox(height: 10),
-          //                   Row(
-          //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //                     children: [
-          //                       Text(
-          //                         S.of(context).base_price,
-          //                         style: TextStyle(
-          //                           fontSize: 17,
-          //                           color: textColor,
-          //                           fontWeight: FontWeight.w500,
-          //                         ),
-          //                       ),
-          //                       Text(
-          //                         "AED ${formatNumberWithCommas(widget.order.products.first.product.price.toDouble())}",
-          //                         style: TextStyle(
-          //                           fontSize: 17,
-          //                           color: textColor,
-          //                           fontWeight: FontWeight.w500,
-          //                         ),
-          //                       ),
-          //                     ],
-          //                   ),
-          //                   SizedBox(height: 6),
-          //                   Row(
-          //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //                     children: [
-          //                       Text(
-          //                         S.of(context).quantity,
-          //                         style: TextStyle(
-          //                           fontSize: 17,
-          //                           color: textColor,
-          //                           fontWeight: FontWeight.w500,
-          //                         ),
-          //                       ),
-          //                       Text(
-          //                         "$totalQuantity",
-          //                         style: TextStyle(
-          //                           fontSize: 17,
-          //                           color: textColor,
-          //                           fontWeight: FontWeight.w500,
-          //                         ),
-          //                       ),
-          //                     ],
-          //                   ),
-          //                   SizedBox(height: 6),
-          //                   Row(
-          //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //                     children: [
-          //                       Text(
-          //                         S.of(context).taxes,
-          //                         style: TextStyle(
-          //                           fontSize: 17,
-          //                           color: textColor,
-          //                           fontWeight: FontWeight.w500,
-          //                         ),
-          //                       ),
-          //                       Text(
-          //                         "AED 24.00",
-          //                         style: TextStyle(
-          //                           fontSize: 17,
-          //                           color: textColor,
-          //                           fontWeight: FontWeight.w500,
-          //                         ),
-          //                       ),
-          //                     ],
-          //                   ),
-          //                   SizedBox(height: 6),
-          //                   Row(
-          //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //                     children: [
-          //                       Text(
-          //                         S.of(context).Shipping_fees,
-          //                         style: TextStyle(
-          //                           fontSize: 17,
-          //                           color: textColor,
-          //                           fontWeight: FontWeight.w500,
-          //                         ),
-          //                       ),
-          //                       Text(
-          //                         "AED 24.00",
-          //                         style: TextStyle(
-          //                           fontSize: 17,
-          //                           color: textColor,
-          //                           fontWeight: FontWeight.w500,
-          //                         ),
-          //                       ),
-          //                     ],
-          //                   ),
-          //                   Padding(
-          //                     padding: EdgeInsets.symmetric(vertical: 10),
-          //                     child: Divider(
-          //                       color: greyColor.withOpacity(0.15),
-          //                       thickness: 3,
-          //                     ),
-          //                   ),
-          //                   Row(
-          //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //                     children: [
-          //                       Text(
-          //                         S.of(context).total,
-          //                         style: TextStyle(
-          //                           fontSize: 20,
-          //                           color: textColor,
-          //                           fontWeight: FontWeight.w800,
-          //                         ),
-          //                       ),
-          //                       Text(
-          //                         "AED ${formatNumberWithCommas(widget.order.price.toDouble())}",
-          //                         style: TextStyle(
-          //                           fontSize: 20,
-          //                           color: textColor,
-          //                           fontWeight: FontWeight.w800,
-          //                         ),
-          //                       ),
-          //                     ],
-          //                   ),
-          //                   Padding(
-          //                     padding: EdgeInsets.symmetric(vertical: 10),
-          //                     child: Divider(
-          //                       color: greyColor.withOpacity(0.15),
-          //                       thickness: 3,
-          //                     ),
-          //                   ),
-          //                   Row(
-          //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //                     children: [
-          //                       Row(
-          //                         spacing: 5,
-          //                         children: [
-          //                           const Icon(
-          //                             Icons.credit_score_rounded,
-          //                             color: textColor,
-          //                           ),
-          //                           Text(
-          //                             S.of(context).payment_method,
-          //                             style: TextStyle(
-          //                               fontSize: 17,
-          //                               color: textColor,
-          //                               fontWeight: FontWeight.w500,
-          //                             ),
-          //                           ),
-          //                         ],
-          //                       ),
-          //                       Row(
-          //                         children: [
-          //                           Icon(
-          //                             Icons.paypal,
-          //                             color: primaryColor,
-          //                             size: 26,
-          //                           ),
-          //                           Text(
-          //                             S.of(context).paypal,
-          //                             style: TextStyle(
-          //                               color: primaryColor,
-          //                               fontWeight: FontWeight.w900,
-          //                               fontSize: 18,
-          //                             ),
-          //                           ),
-          //                         ],
-          //                       ),
-          //                     ],
-          //                   ),
-          //                   SizedBox(height: 10),
-          //                   Row(
-          //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //                     children: [
-          //                       Row(
-          //                         children: [
-          //                           const Icon(
-          //                             Icons.timelapse_rounded,
-          //                             color: textColor,
-          //                           ),
-          //                           SizedBox(width: 5),
-          //                           Text(
-          //                             S.of(context).delivery_days,
-          //                             style: TextStyle(
-          //                               fontSize: 17,
-          //                               color: textColor,
-          //                               fontWeight: FontWeight.w500,
-          //                             ),
-          //                           ),
-          //                         ],
-          //                       ),
-          //                       Text(
-          //                         "${widget.order.deliveryTime} ${S.of(context).days}",
-          //                         style: TextStyle(
-          //                           fontSize: 17,
-          //                           color: primaryColor,
-          //                           fontWeight: FontWeight.w900,
-          //                         ),
-          //                       ),
-          //                     ],
-          //                   ),
-          //                 ],
-          //               ),
-          //             ),
-          //           ),
-          //         ),
-          //       ),
-          //       SizedBox(height: 10),
-          //     ],
-          //   ),
-          // ),
         );
       },
     );
@@ -883,8 +382,8 @@ class _OrderDetailsState extends State<OrderDetails> {
     // Your existing product card widget logic here
     return Padding(
       padding: EdgeInsets.only(
-        left: lang == 'ar' ? 7 : 0,
-        right: lang == 'en' ? 7 : 0,
+        left: lang == 'en' ? 7 : 0,
+        right: lang == 'ar' ? 7 : 0,
         bottom: 5,
         top: 5,
       ),
@@ -966,7 +465,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                           children: [
                             Material(
                               color: getStatusBackgroundColor(
-                                widget.order.orderStatus,
+                                widget.orderStatus ?? widget.order.orderStatus,
                               ),
                               borderRadius: BorderRadius.circular(6.r),
                               child: Padding(
@@ -979,18 +478,21 @@ class _OrderDetailsState extends State<OrderDetails> {
                                     Icon(
                                       IconlyLight.document,
                                       color: getStatusTextColor(
-                                        widget.order.orderStatus,
+                                        widget.orderStatus ??
+                                            widget.order.orderStatus,
                                       ),
                                       size: 20,
                                     ),
                                     SizedBox(width: 3),
                                     Text(
-                                      widget.order.orderStatus.name,
+                                      widget.orderStatus?.name ??
+                                          widget.order.orderStatus.name,
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
                                         color: getStatusTextColor(
-                                          widget.order.orderStatus,
+                                          widget.orderStatus ??
+                                              widget.order.orderStatus,
                                         ),
                                       ),
                                     ),

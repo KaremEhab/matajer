@@ -713,6 +713,26 @@ class _AddProductsState extends State<AddProducts> {
                                   return _buildRemovableImage(
                                     context: context,
                                     imageWidget: imgWidget,
+                                    onPreview: () {
+                                      if (imageIndex <
+                                          networkImageUrls.length) {
+                                        showProfilePreview(
+                                          context: context,
+                                          isProfile: false,
+                                          imageUrl:
+                                              networkImageUrls[imageIndex],
+                                        );
+                                      } else {
+                                        final file =
+                                            fileImages[imageIndex -
+                                                networkImageUrls.length];
+                                        showProfilePreview(
+                                          context: context,
+                                          isProfile: false,
+                                          file: file,
+                                        );
+                                      }
+                                    },
                                     onRemove: () {
                                       setState(() {
                                         if (imageIndex <
@@ -1084,12 +1104,12 @@ class _AddProductsState extends State<AddProducts> {
                                         child: InkWell(
                                           onTap: () {
                                             setState(() {
-                                              detectChanges();
                                               subCategoryExpanded =
                                                   !subCategoryExpanded;
                                               selectedSubCategory = index;
                                               subCategoryController.text =
                                                   subCategories[selectedSubCategory];
+                                              detectChanges();
                                             });
                                           },
                                           child: Padding(
@@ -2017,9 +2037,10 @@ class _AddProductsState extends State<AddProducts> {
                                             context: context,
                                             shopModel: widget.shopModel!,
                                             title: capitalizeWords(
-                                              titleController.text,
+                                              titleController.text.trim(),
                                             ),
-                                            description: descController.text,
+                                            description: descController.text
+                                                .trim(),
                                             images: fileImages,
                                             price: num.parse(
                                               priceController.text,
@@ -2113,16 +2134,20 @@ class _AddProductsState extends State<AddProducts> {
     required BuildContext context,
     required Widget imageWidget,
     required VoidCallback onRemove,
+    required VoidCallback onPreview,
   }) {
     return Stack(
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(15),
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.grey[200],
-            child: imageWidget,
+          child: InkWell(
+            onTap: onPreview,
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.grey[200],
+              child: imageWidget,
+            ),
           ),
         ),
         Positioned(

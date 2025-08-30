@@ -170,9 +170,7 @@ class ProductCubit extends Cubit<ProductState> {
           <String, dynamic>{'shops': shopJsonList, 'shopType': shopType},
         );
 
-        newShops = filteredJsonList
-            .map((e) => ShopModel.fromJson(e))
-            .toList();
+        newShops = filteredJsonList.map((e) => ShopModel.fromJson(e)).toList();
       }
 
       shops.addAll(newShops);
@@ -1278,6 +1276,38 @@ class ProductCubit extends Cubit<ProductState> {
     } catch (e) {
       log('❌ Failed to get products for shop $shopId: $e');
       emit(ProductGetAllProductsErrorState(e.toString()));
+    }
+  }
+
+  // 🔥 Cache map
+  final Map<String, ProductModel> _productCache = {};
+
+  Future<ProductModel?> getProductById({required String productId}) async {
+    // if already cached → return it immediately
+    if (_productCache.containsKey(productId)) {
+      return _productCache[productId];
+    }
+
+    emit(ProductGetProductByIdLoadingState());
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('products')
+          .doc(productId)
+          .get();
+
+      if (doc.exists) {
+        final product = ProductModel.fromJson(doc.data()!);
+        _productCache[productId] = product; // ✅ store in cache
+        emit(ProductGetProductByIdSuccessState(product));
+        return product;
+      } else {
+        emit(ProductGetProductByIdErrorState("Product not found"));
+        return null;
+      }
+    } catch (e) {
+      emit(ProductGetProductByIdErrorState(e.toString()));
+      return null;
     }
   }
 

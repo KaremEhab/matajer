@@ -149,6 +149,20 @@ class ProductGetAllSellersErrorState extends ProductState {
   ProductGetAllSellersErrorState(this.error);
 }
 
+class ProductGetProductByIdLoadingState extends ProductState {}
+
+class ProductGetProductByIdSuccessState extends ProductState {
+  final ProductModel product;
+
+  ProductGetProductByIdSuccessState(this.product);
+}
+
+class ProductGetProductByIdErrorState extends ProductState {
+  final String error;
+
+  ProductGetProductByIdErrorState(this.error);
+}
+
 class ProductSearchSellersSuccessState extends ProductState {}
 
 class ProductAddProductToCartLoadingState extends ProductState {}

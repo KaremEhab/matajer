@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:io';
 import 'dart:math' hide log;
 import 'dart:ui';
 import 'package:another_flushbar/flushbar.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:matajer/constants/colors.dart';
 import 'package:matajer/constants/vars.dart';
@@ -372,29 +374,32 @@ String capitalizeWords(String text) {
       .join(' ');
 }
 
+/// Call this for both network and file images
 void showProfilePreview({
   required BuildContext context,
+  String? imageUrl,
+  XFile? file,
   bool isProfile = true,
-  required String imageUrl,
 }) {
   Navigator.of(context).push(
     PageRouteBuilder(
       opaque: false,
       barrierColor: Colors.black.withOpacity(0.4),
-      pageBuilder: (_, __, ___) =>
-          _ProfileFlipView(imageUrl: imageUrl, isProfile: isProfile),
+      pageBuilder: (_, __, ___) => _ProfileFlipView(
+        imageUrl: imageUrl,
+        file: file,
+        isProfile: isProfile,
+      ),
     ),
   );
 }
 
 class _ProfileFlipView extends StatefulWidget {
-  final String imageUrl;
+  final String? imageUrl; // network
+  final XFile? file; // local file
   final bool isProfile;
 
-  const _ProfileFlipView({
-    required this.imageUrl,
-    required this.isProfile,
-  });
+  const _ProfileFlipView({this.imageUrl, this.file, this.isProfile = false});
 
   @override
   State<_ProfileFlipView> createState() => _ProfileFlipViewState();
@@ -425,8 +430,30 @@ class _ProfileFlipViewState extends State<_ProfileFlipView>
     super.dispose();
   }
 
+  Widget _buildImage() {
+    if (widget.file != null) {
+      return Image.file(
+        File(widget.file!.path),
+        height: 0.5.sh,
+        width: 0.9.sw,
+        fit: BoxFit.cover,
+      );
+    } else {
+      return CachedNetworkImage(
+        imageUrl: widget.imageUrl!,
+        progressIndicatorBuilder: (context, url, progress) =>
+            shimmerPlaceholder(height: 0.5.sh, width: 0.9.sw, radius: 200.r),
+        height: 0.5.sh,
+        width: 0.9.sw,
+        fit: BoxFit.cover,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final heroTag = widget.file?.path ?? widget.imageUrl!;
+
     return GestureDetector(
       onTap: () => Navigator.of(context).pop(),
       child: Scaffold(
@@ -447,7 +474,7 @@ class _ProfileFlipViewState extends State<_ProfileFlipView>
                         final angle = _animation.value;
 
                         return Hero(
-                          tag: widget.imageUrl,
+                          tag: heroTag,
                           child: Container(
                             decoration: BoxDecoration(
                               border: Border.all(
@@ -477,19 +504,7 @@ class _ProfileFlipViewState extends State<_ProfileFlipView>
                                     ..rotateY(angle),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(200.r),
-                                    child: CachedNetworkImage(
-                                      imageUrl: widget.imageUrl,
-                                      progressIndicatorBuilder:
-                                          (context, url, progress) =>
-                                              shimmerPlaceholder(
-                                                height: 0.5.sh,
-                                                width: 0.9.sw,
-                                                radius: 200.r,
-                                              ),
-                                      height: 0.5.sh,
-                                      width: 0.9.sw,
-                                      fit: BoxFit.cover,
-                                    ),
+                                    child: _buildImage(),
                                   ),
                                 ),
                               ),
@@ -499,14 +514,20 @@ class _ProfileFlipViewState extends State<_ProfileFlipView>
                       },
                     )
                   : Hero(
-                      tag: widget.imageUrl,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(15),
-                        child: CachedNetworkImage(
-                          imageUrl: widget.imageUrl,
-                          fit: BoxFit.cover,
-                          width: MediaQuery.of(context).size.width * 0.9,
-                          height: MediaQuery.of(context).size.height * 0.5,
+                      tag: heroTag,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: widget.file != null
+                              ? Image.file(
+                                  File(widget.file!.path),
+                                  fit: BoxFit.cover,
+                                )
+                              : CachedNetworkImage(
+                                  imageUrl: widget.imageUrl!,
+                                  fit: BoxFit.cover,
+                                ),
                         ),
                       ),
                     ),

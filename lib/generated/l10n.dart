@@ -4764,6 +4764,141 @@ class S {
   String get offers {
     return Intl.message('Offers', name: 'offers', desc: '', args: []);
   }
+
+  /// `Empty Transactions`
+  String get empty_transactions {
+    return Intl.message(
+      'Empty Transactions',
+      name: 'empty_transactions',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Top Buyers`
+  String get top_buyers {
+    return Intl.message('Top Buyers', name: 'top_buyers', desc: '', args: []);
+  }
+
+  /// `Paid`
+  String get paid {
+    return Intl.message('Paid', name: 'paid', desc: '', args: []);
+  }
+
+  /// `Men`
+  String get men {
+    return Intl.message('Men', name: 'men', desc: '', args: []);
+  }
+
+  /// `Women`
+  String get women {
+    return Intl.message('Women', name: 'women', desc: '', args: []);
+  }
+
+  /// `Liked by`
+  String get liked_by {
+    return Intl.message('Liked by', name: 'liked_by', desc: '', args: []);
+  }
+
+  /// `Gender Charts`
+  String get gender_charts {
+    return Intl.message(
+      'Gender Charts',
+      name: 'gender_charts',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Orders by Status`
+  String get orders_by_status {
+    return Intl.message(
+      'Orders by Status',
+      name: 'orders_by_status',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Product Clicks`
+  String get product_clicks {
+    return Intl.message(
+      'Product Clicks',
+      name: 'product_clicks',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Top Selling Products`
+  String get top_selling_products {
+    return Intl.message(
+      'Top Selling Products',
+      name: 'top_selling_products',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Revenue Trend`
+  String get revenue_trend {
+    return Intl.message(
+      'Revenue Trend',
+      name: 'revenue_trend',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sales Trend`
+  String get sales_trend {
+    return Intl.message('Sales Trend', name: 'sales_trend', desc: '', args: []);
+  }
+
+  /// `Orders Trend`
+  String get orders_trend {
+    return Intl.message(
+      'Orders Trend',
+      name: 'orders_trend',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Total Revenue`
+  String get total_revenue {
+    return Intl.message(
+      'Total Revenue',
+      name: 'total_revenue',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Total quantity sold`
+  String get total_quantity_sold {
+    return Intl.message(
+      'Total quantity sold',
+      name: 'total_quantity_sold',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Yearly`
+  String get yearly {
+    return Intl.message('Yearly', name: 'yearly', desc: '', args: []);
+  }
+
+  /// `Place order`
+  String get place_order {
+    return Intl.message('Place order', name: 'place_order', desc: '', args: []);
+  }
+
+  /// `See it now`
+  String get see_it_now {
+    return Intl.message('See it now', name: 'see_it_now', desc: '', args: []);
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

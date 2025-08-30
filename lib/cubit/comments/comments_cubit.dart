@@ -46,10 +46,17 @@ class CommentsCubit extends Cubit<CommentsState> {
   Future<void> submitShopComment({
     required ShopModel shopModel,
     required String comment,
-    double rating = 5, // optional rating for the shop, default 5
+    double rating = 5,
   }) async {
     try {
-      // 1. Update total rating counters on shop
+      final newComment = CommentsModel(
+        comment: comment,
+        rating: rating,
+        userId: currentUserModel.uId,
+        createdAt: Timestamp.now(),
+      );
+
+      // 1. Update rating counters
       await FirebaseFirestore.instance
           .collection('shops')
           .doc(shopModel.shopId)
@@ -58,24 +65,22 @@ class CommentsCubit extends Cubit<CommentsState> {
             'sumOfRating': FieldValue.increment(rating),
           });
 
-      // 2. Save comment details in /comments subcollection
+      // 2. Save in Firestore
       await FirebaseFirestore.instance
           .collection('shops')
           .doc(shopModel.shopId)
           .collection('comments')
-          .add({
-            'comment': comment,
-            'rating': rating,
-            'userId':
-                currentUserModel.uId, // assuming you have the logged-in user
-            'createdAt': Timestamp.now(),
-          });
+          .add(newComment.toMap());
 
-      // 3. Optionally, send notification to the shop owner
+      // 3. Add to local list for instant UI update
+      comments.insert(0, newComment); // show latest on top
+      emit(CommentsUpdatedState(comments));
+
+      // 4. Notifications
       await NotificationCubit.instance.sendNotification(
         title: "${currentUserModel.username} commented on your shop",
         body: comment,
-        userId: shopModel.shopId, // replace with actual ownerId field
+        userId: shopModel.shopId,
         notificationType: NotificationTypes.comment,
         payload: jsonEncode({
           'type': NotificationTypes.comment.name,
@@ -89,7 +94,7 @@ class CommentsCubit extends Cubit<CommentsState> {
         title: "${currentUserModel.username} commented on your shop",
         body: comment,
         type: NotificationTypes.comment,
-        payload: {'shopModel': shopModel},
+        payload: {'shopModel': shopModel.toMap()},
       );
 
       emit(CommentsSubmitRatingSuccessState());
@@ -231,16 +236,22 @@ class CommentsCubit extends Cubit<CommentsState> {
                       const SizedBox(height: 10),
 
                       // Comment TextField
-                      TextFormField(
-                        controller: commentController,
-                        decoration: InputDecoration(
-                          labelText: S.of(context).write_your_review,
-                          border: OutlineInputBorder(),
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom,
                         ),
-                        maxLines: 5,
-                        onChanged: (_) => setState(() {
-                          cacheValues();
-                        }),
+                        child: TextFormField(
+                          controller: commentController,
+
+                          decoration: InputDecoration(
+                            labelText: S.of(context).write_your_review,
+                            border: OutlineInputBorder(),
+                          ),
+                          maxLines: 5,
+                          onChanged: (_) => setState(() {
+                            cacheValues();
+                          }),
+                        ),
                       ),
 
                       const SizedBox(height: 20),

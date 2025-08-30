@@ -325,7 +325,9 @@ class LayoutState extends State<Layout> with WidgetsBindingObserver {
                           onTap: (value) {
                             setState(() {
                               if (!isSeller && value == 0) {
-                                homeKey.currentState!.scrollToTop();
+                                if (homeKey.currentState?.mounted ?? false) {
+                                  homeKey.currentState!.scrollToTop();
+                                }
                               }
                               if (isSeller && value == 2) {
                                 slideAnimation(

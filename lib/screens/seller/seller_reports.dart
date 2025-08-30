@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:matajer/constants/colors.dart';
 import 'package:matajer/constants/functions.dart';
+import 'package:matajer/constants/vars.dart';
 import 'package:matajer/cubit/analyticals/analyticals_cubit.dart';
 import 'package:matajer/cubit/analyticals/analyticals_state.dart';
 import 'package:matajer/generated/l10n.dart';
@@ -41,6 +42,21 @@ class _ReportsState extends State<Reports> {
   void _onTimeframeChanged(String timeframe) {
     setState(() => selectedTimeframe = timeframe);
     _fetchData();
+  }
+
+  String _getTranslatedTimeframe(String timeframe) {
+    switch (timeframe) {
+      case 'daily':
+        return S.current.daily;
+      case 'weekly':
+        return S.current.weekly;
+      case 'monthly':
+        return S.current.monthly;
+      case 'yearly':
+        return S.current.yearly;
+      default:
+        return timeframe;
+    }
   }
 
   String formatDate(DateTime date, String timeframe) {
@@ -129,7 +145,7 @@ class _ReportsState extends State<Reports> {
                     PopupMenuItem(
                       value: 'daily',
                       child: Text(
-                        'Daily',
+                        S.current.daily,
                         style: TextStyle(
                           color: selectedTimeframe == 'daily'
                               ? primaryColor
@@ -143,7 +159,7 @@ class _ReportsState extends State<Reports> {
                     PopupMenuItem(
                       value: 'weekly',
                       child: Text(
-                        'Weekly',
+                        S.current.weekly,
                         style: TextStyle(
                           color: selectedTimeframe == 'weekly'
                               ? primaryColor
@@ -157,7 +173,7 @@ class _ReportsState extends State<Reports> {
                     PopupMenuItem(
                       value: 'monthly',
                       child: Text(
-                        'Monthly',
+                        S.current.monthly,
                         style: TextStyle(
                           color: selectedTimeframe == 'monthly'
                               ? primaryColor
@@ -171,7 +187,7 @@ class _ReportsState extends State<Reports> {
                     PopupMenuItem(
                       value: 'yearly',
                       child: Text(
-                        'Yearly',
+                        S.current.yearly,
                         style: TextStyle(
                           color: selectedTimeframe == 'yearly'
                               ? primaryColor
@@ -187,7 +203,11 @@ class _ReportsState extends State<Reports> {
                     spacing: 5,
                     children: [
                       Text(
-                        selectedTimeframe.toUpperCase(),
+                        _getTranslatedTimeframe(
+                          lang == 'en'
+                              ? selectedTimeframe.toUpperCase()
+                              : selectedTimeframe,
+                        ),
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w900,
@@ -215,7 +235,7 @@ class _ReportsState extends State<Reports> {
                         runSpacing: 10,
                         children: [
                           _metricCard(
-                            title: 'Total Sales',
+                            title: S.current.total_sales,
                             value: formatNumberWithCommas(
                               state.totalSales.toDouble(),
                             ),
@@ -224,32 +244,32 @@ class _ReportsState extends State<Reports> {
                             fontSize: state.totalSales > 1000000 ? 18 : 20,
                           ),
                           _metricCard(
-                            title: 'Total quantity sold',
+                            title: S.current.total_quantity_sold,
                             value: '${state.totalQuantitySold}',
                             color: primaryColor,
                             width: (width - 24) / 2,
                           ),
                           _metricCard(
-                            title: 'Avg Delivery Time',
+                            title: S.current.avg_time,
                             value:
                                 '${state.avgDeliveryTime.toInt()} ${S.of(context).days}',
                             color: primaryColor,
                             width: (width - 24) / 2,
                           ),
                           _metricCard(
-                            title: 'Total Orders',
+                            title: S.current.total_orders,
                             value: '${state.totalOrders}',
                             color: primaryColor,
                             width: (width - 24) / 2,
                           ),
                           _metricCard(
-                            title: 'Product Clicks',
+                            title: S.current.product_clicks,
                             value: '${state.totalProductClicks}',
                             color: primaryColor,
                             width: (width - 24) / 2,
                           ),
                           _metricCard(
-                            title: 'Total Revenue',
+                            title: S.current.total_revenue,
                             value:
                                 "AED ${formatNumberWithCommas(state.totalRevenue.toDouble())}",
                             color: primaryColor,
@@ -266,7 +286,7 @@ class _ReportsState extends State<Reports> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 7),
                       child: Text(
-                        'Orders Trend',
+                        S.current.orders_trend,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
@@ -366,7 +386,7 @@ class _ReportsState extends State<Reports> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 7),
                       child: Text(
-                        'Sales Trend',
+                        S.current.sales_trend,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
@@ -448,7 +468,7 @@ class _ReportsState extends State<Reports> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 7),
                       child: Text(
-                        'Revenue Trend',
+                        S.current.revenue_trend,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
@@ -531,7 +551,7 @@ class _ReportsState extends State<Reports> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 7),
                         child: Text(
-                          'Top Selling Products',
+                          S.current.top_selling_products,
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
@@ -554,7 +574,7 @@ class _ReportsState extends State<Reports> {
                             child: Row(
                               children: [
                                 Text(
-                                  'Product Clicks',
+                                  S.current.product_clicks,
                                   style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(fontWeight: FontWeight.bold),
                                 ),
@@ -613,6 +633,7 @@ class _ReportsState extends State<Reports> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 10),
                     ProductClicksTrendChart(
                       trendData: state.productClicksTrend,
                       timeframe: selectedTimeframe,
@@ -624,7 +645,7 @@ class _ReportsState extends State<Reports> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 7),
                       child: Text(
-                        'Orders by Status',
+                        S.current.orders_by_status,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
@@ -645,7 +666,8 @@ class _ReportsState extends State<Reports> {
                               final isLastTwo =
                                   index >= state.orderStatusCount.length - 2;
                               return _metricCard(
-                                value: '${e.key}: ${e.value}',
+                                value:
+                                    '${getTranslatedOrderStatus(context, OrderStatusParser.fromString(e.key)!)}: ${e.value}',
                                 color: getStatusTextColor(
                                   OrderStatusParser.fromString(e.key)!,
                                 ),
@@ -667,7 +689,7 @@ class _ReportsState extends State<Reports> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Gender Purchasing Chart',
+                            S.current.gender_charts,
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
@@ -691,7 +713,7 @@ class _ReportsState extends State<Reports> {
                                     ),
                                     const SizedBox(height: 10),
                                     _metricCard(
-                                      title: 'Liked by',
+                                      title: S.current.liked_by,
                                       value:
                                           '${state.totalShopFavourites} ${state.totalShopFavourites > 1 ? S.of(context).users : S.of(context).user}',
                                       color: primaryColor,
@@ -720,7 +742,7 @@ class _ReportsState extends State<Reports> {
                                                         ?.toDouble() ??
                                                     0,
                                                 title:
-                                                    "Men\n${state.genderDistribution['male'] ?? 0}",
+                                                    "${S.current.men}\n${state.genderDistribution['male'] ?? 0}",
                                                 color: primaryColor,
                                                 radius: touchedIndex == 0
                                                     ? 70
@@ -738,7 +760,7 @@ class _ReportsState extends State<Reports> {
                                                         ?.toDouble() ??
                                                     0,
                                                 title:
-                                                    "Women\n${state.genderDistribution['female'] ?? 0}",
+                                                    "${S.current.women}\n${state.genderDistribution['female'] ?? 0}",
                                                 color: primaryColor.withOpacity(
                                                   0.6,
                                                 ),
@@ -804,15 +826,15 @@ class _ReportsState extends State<Reports> {
                                                   () {
                                                     String gender =
                                                         touchedIndex == 0
-                                                        ? 'Men'
-                                                        : 'Women';
+                                                        ? S.current.men
+                                                        : S.current.women;
                                                     int orders =
                                                         touchedIndex == 0
                                                         ? ordersByGender['male'] ??
                                                               0
                                                         : ordersByGender['female'] ??
                                                               0;
-                                                    return '$gender Orders: $orders';
+                                                    return '$gender ${S.current.orders}: $orders';
                                                   }(),
                                                   style: const TextStyle(
                                                     color: Colors.white,
@@ -823,15 +845,15 @@ class _ReportsState extends State<Reports> {
                                                   () {
                                                     String gender =
                                                         touchedIndex == 0
-                                                        ? 'Men'
-                                                        : 'Women';
+                                                        ? S.current.men
+                                                        : S.current.women;
                                                     double totalPurchases =
                                                         touchedIndex == 0
                                                         ? totalSalesByGender['male'] ??
                                                               0
                                                         : totalSalesByGender['female'] ??
                                                               0;
-                                                    return '$gender Paid: AED ${formatNumberWithCommas(totalPurchases)}';
+                                                    return '$gender ${S.current.paid}: AED ${formatNumberWithCommas(totalPurchases)}';
                                                   }(),
                                                   style: const TextStyle(
                                                     color: Colors.white,
@@ -857,7 +879,7 @@ class _ReportsState extends State<Reports> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 7),
                         child: Text(
-                          'Top Buyers',
+                          S.current.top_buyers,
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
@@ -1092,6 +1114,14 @@ class ProductClicksTrendChart extends StatelessWidget {
   }
 
   List<String> _sortBuckets(List<String> buckets) {
+    String normalizeDigits(String input) {
+      const easternArabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+      for (var i = 0; i < easternArabic.length; i++) {
+        input = input.replaceAll(easternArabic[i], i.toString());
+      }
+      return input;
+    }
+
     switch (timeframe) {
       case "daily":
         buckets.sort((a, b) {
@@ -1107,7 +1137,11 @@ class ProductClicksTrendChart extends StatelessWidget {
         );
         break;
       case "monthly":
-        buckets.sort((a, b) => int.parse(a).compareTo(int.parse(b)));
+        buckets.sort((a, b) {
+          final intA = int.parse(normalizeDigits(a));
+          final intB = int.parse(normalizeDigits(b));
+          return intA.compareTo(intB);
+        });
         break;
       case "yearly":
         final monthOrder = List.generate(
@@ -1183,7 +1217,10 @@ class ProductClicksTrendChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (trendData.isEmpty) {
-      return const SizedBox(height: 200, child: Center(child: Text('No data')));
+      return SizedBox(
+        height: 200,
+        child: Center(child: Text(S.current.empty_orders)),
+      );
     }
 
     final buckets = getAllBuckets();
@@ -1243,7 +1280,7 @@ class ProductClicksTrendChart extends StatelessWidget {
                   final product =
                       selectedProduct ?? trendData.keys.elementAt(rodIndex);
                   return BarTooltipItem(
-                    "$product\n$bucket: ${rod.toY.toInt()} clicks",
+                    "$product\n$bucket: ${rod.toY.toInt()} ${S.current.clicks}",
                     const TextStyle(color: Colors.white),
                   );
                 },
@@ -1317,7 +1354,10 @@ class TopProductsBarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (data.isEmpty) {
-      return const SizedBox(height: 200, child: Center(child: Text('No data')));
+      return SizedBox(
+        height: 200,
+        child: Center(child: Text(S.current.empty_orders)),
+      );
     }
 
     final maxValue = data
@@ -1389,25 +1429,3 @@ class TopProductsBarChart extends StatelessWidget {
     );
   }
 }
-
-// Analytics Types for a Shop
-// 1️⃣ Sales & Orders Analytics
-// Total Orders: Number of orders in the selected timeframe.
-// Revenue: Sum of price from orders (maybe consider discounts if applied per product).
-// Order Status Breakdown: Number of orders per OrderStatus (pending, accepted, shipped, delivered, rejected).
-// Average Delivery Time: Average deliveryTime from delivered orders.
-// Orders Trend: Number of orders per hour/day/week/month, depending on the selected timeframe.
-// Repeat Customers: Count of buyers who ordered more than once in the timeframe.
-// 2️⃣ Product Analytics
-// Top Selling Products: Products with the highest quantity sold.
-// Product Clicks: Sum of clicks from your ProductModel.
-// Revenue by Product: Total revenue contributed by each product.
-// Low Stock Products: Products with quantity below a threshold (optional).
-// 3️⃣ Customer Analytics
-// Total Unique Buyers: Number of distinct buyerIds in the timeframe.
-// Customer Retention Rate: Optional if you want to track repeat purchases.
-// Top Buyers: Buyers who spent the most.
-// 4️⃣ Shop Activity Analytics
-// Shop Rating: Average rating (sumOfRating / numberOfRating) over time.
-// Favorite Users: How many users set the shop as favorite.
-// Auto Accept Orders Impact: Track orders auto-accepted vs manually accepted.

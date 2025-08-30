@@ -22,6 +22,7 @@ class CustomFormField extends StatelessWidget {
     this.maxLines,
     this.suffix,
     this.obscure = false,
+    this.fontSize = 15,
     this.readOnly = false,
     this.hasTitle = false,
     this.outlineInputBorder,
@@ -42,20 +43,20 @@ class CustomFormField extends StatelessWidget {
   final bool obscure, readOnly, hasTitle;
   final Color? textColor, color, cursorColor;
   final OutlineInputBorder? outlineInputBorder;
+  final double? fontSize;
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment:
-          hasTitle == true
-              ? CrossAxisAlignment.start
-              : CrossAxisAlignment.center,
+      crossAxisAlignment: hasTitle == true
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
       children: [
         if (hasTitle == true)
           Text(
             title,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: fontSize ?? 15,
               fontWeight: FontWeight.w600,
               color: textColor ?? primaryColor.withOpacity(0.75),
             ),

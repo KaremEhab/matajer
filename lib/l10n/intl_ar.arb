@@ -620,6 +620,28 @@
   "user": "مستخدم",
   "users": "مستخدمون",
 
-  "offers": "العروض"
+  "offers": "العروض",
+
+  "empty_transactions": "لا يوجد أي معاملات حاليًا",
+
+  "top_buyers": "أفضل المشترين",
+  "paid": "مدفوع",
+  "men": "الرجال",
+  "women": "النساء",
+  "liked_by": "أُعجب به",
+  "gender_charts": "مخططات الجنس",
+  "orders_by_status": "الطلبات حسب الحالة",
+  "product_clicks": "نقرات المنتج",
+  "top_selling_products": "المنتجات الأكثر مبيعًا",
+  "revenue_trend": "اتجاه الإيرادات",
+  "sales_trend": "اتجاه المبيعات",
+  "orders_trend": "اتجاه الطلبات",
+  "total_revenue": "إجمالي الإيرادات",
+  "total_quantity_sold": "إجمالي الكمية المباعة",
+  "yearly": "سنوي",
+
+  "place_order": "إتمام الطلب",
+  "see_it_now": "شاهدها الآن"
+
 }
 

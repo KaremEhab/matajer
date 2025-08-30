@@ -108,11 +108,9 @@ class OrderCard extends StatelessWidget {
                         SizedBox(height: 8.h),
                         Row(
                           children: [
+                            Expanded(child: buildReOrderButton(context, order)),
                             Expanded(
-                              child: _buildReOrderButton(context, order),
-                            ),
-                            Expanded(
-                              child: _buildStatusBadge(context, order.id),
+                              child: buildStatusBadge(context, order.id),
                             ),
                           ],
                         ),
@@ -147,7 +145,7 @@ class OrderCard extends StatelessWidget {
   }
 }
 
-Widget _buildReOrderButton(BuildContext context, OrderModel order) {
+Widget buildReOrderButton(BuildContext context, OrderModel order) {
   return Padding(
     padding: EdgeInsetsGeometry.directional(end: 5),
     child: Material(
@@ -230,7 +228,7 @@ Widget _buildReOrderButton(BuildContext context, OrderModel order) {
   );
 }
 
-Widget _buildRateButton(BuildContext context) {
+Widget buildRateButton(BuildContext context, String orderId) {
   return Padding(
     padding: EdgeInsets.only(
       right: lang == 'en' ? 6.w : 0,
@@ -243,10 +241,18 @@ Widget _buildRateButton(BuildContext context) {
         borderRadius: BorderRadius.circular(10),
         onTap: () {
           final orders = OrderCubit.get(context).buyerOrders;
-          final lastIndex = orders.length - 1;
-          OrderCubit.get(
-            context,
-          ).showRatingModal(context: context, index: lastIndex);
+          final orderIndex = orders.indexWhere((order) => order.id == orderId);
+
+          if (orderIndex != -1) {
+            OrderCubit.get(
+              context,
+            ).showRatingModal(context: context, index: orderIndex);
+          } else {
+            // Optional: show error if order not found
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text("Order not found")));
+          }
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -261,7 +267,7 @@ Widget _buildRateButton(BuildContext context) {
               ),
               Text(
                 S.of(context).rate_order,
-                style: TextStyle(fontWeight: FontWeight.w700),
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ],
           ),
@@ -271,7 +277,7 @@ Widget _buildRateButton(BuildContext context) {
   );
 }
 
-Widget _buildStatusBadge(BuildContext context, String orderId) {
+Widget buildStatusBadge(BuildContext context, String orderId) {
   return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
     stream: FirebaseFirestore.instance
         .collection('orders')
@@ -307,7 +313,7 @@ Widget _buildStatusBadge(BuildContext context, String orderId) {
 
       // ✅ Show rate button if delivered
       if (status == OrderStatus.delivered) {
-        return _buildRateButton(context);
+        return buildRateButton(context, orderId);
       }
 
       // ✅ Otherwise show status badge

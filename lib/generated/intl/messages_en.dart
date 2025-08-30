@@ -370,6 +370,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "emirates": MessageLookupByLibrary.simpleMessage("Emirates"),
     "empty_orders": MessageLookupByLibrary.simpleMessage("No orders found"),
     "empty_products": MessageLookupByLibrary.simpleMessage("No products found"),
+    "empty_transactions": MessageLookupByLibrary.simpleMessage(
+      "Empty Transactions",
+    ),
     "english": MessageLookupByLibrary.simpleMessage("EN"),
     "enter_address": MessageLookupByLibrary.simpleMessage(
       "Enter your new address",
@@ -414,6 +417,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Fulfilled orders",
     ),
     "gender": MessageLookupByLibrary.simpleMessage("Gender"),
+    "gender_charts": MessageLookupByLibrary.simpleMessage("Gender Charts"),
     "get_help": MessageLookupByLibrary.simpleMessage("GET HELP"),
     "get_started_buyer": MessageLookupByLibrary.simpleMessage(
       "GET STARTED AS BUYER",
@@ -499,6 +503,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "license_number_validation": MessageLookupByLibrary.simpleMessage(
       "Please enter you license number",
     ),
+    "liked_by": MessageLookupByLibrary.simpleMessage("Liked by"),
     "loading": MessageLookupByLibrary.simpleMessage("Loading..."),
     "loading_delivery": MessageLookupByLibrary.simpleMessage(
       "Loading delivery time...",
@@ -523,6 +528,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "At Matajer, we aim to provide a superior shopping experience through innovation, reliability, and customer-centric services. By focusing on quality, convenience, and trust, we strive to connect people with the products they need, whenever and wherever they need them",
     ),
     "matajer_support": MessageLookupByLibrary.simpleMessage("Matajer Support"),
+    "men": MessageLookupByLibrary.simpleMessage("Men"),
     "mentioned_your_product": MessageLookupByLibrary.simpleMessage(
       "Mentioned a product of yours",
     ),
@@ -636,6 +642,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "order_summary": MessageLookupByLibrary.simpleMessage("Order summary"),
     "ordered": MessageLookupByLibrary.simpleMessage("Ordered"),
     "orders": MessageLookupByLibrary.simpleMessage("Orders"),
+    "orders_by_status": MessageLookupByLibrary.simpleMessage(
+      "Orders by Status",
+    ),
     "orders_history": MessageLookupByLibrary.simpleMessage("Orders History"),
     "orders_specifications": MessageLookupByLibrary.simpleMessage(
       "Orders Specifications",
@@ -643,10 +652,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "orders_tip": MessageLookupByLibrary.simpleMessage(
       "Get updates when a new order is placed or when your order status changes",
     ),
+    "orders_trend": MessageLookupByLibrary.simpleMessage("Orders Trend"),
     "others": MessageLookupByLibrary.simpleMessage("others"),
     "our_mission": MessageLookupByLibrary.simpleMessage("Our Mission"),
     "our_services": MessageLookupByLibrary.simpleMessage("Our Services"),
     "out_stock": MessageLookupByLibrary.simpleMessage("Out-Stock"),
+    "paid": MessageLookupByLibrary.simpleMessage("Paid"),
     "password_at_least_char": MessageLookupByLibrary.simpleMessage(
       "Password must be at least 8 characters",
     ),
@@ -708,6 +719,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "pick_image": MessageLookupByLibrary.simpleMessage("Pick Image"),
     "pieces": MessageLookupByLibrary.simpleMessage("Pcs"),
     "pin": MessageLookupByLibrary.simpleMessage("Pin"),
+    "place_order": MessageLookupByLibrary.simpleMessage("Place order"),
     "please_enter_a_valid_full_name": MessageLookupByLibrary.simpleMessage(
       "Please enter a valid full name",
     ),
@@ -768,6 +780,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "product_category": MessageLookupByLibrary.simpleMessage(
       "Product category",
     ),
+    "product_clicks": MessageLookupByLibrary.simpleMessage("Product Clicks"),
     "product_details": MessageLookupByLibrary.simpleMessage("Product details"),
     "product_id": MessageLookupByLibrary.simpleMessage("Product ID"),
     "product_images": MessageLookupByLibrary.simpleMessage("Product images"),
@@ -844,11 +857,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "revenue_tip": MessageLookupByLibrary.simpleMessage(
       "The amount collected from all order transactions",
     ),
+    "revenue_trend": MessageLookupByLibrary.simpleMessage("Revenue Trend"),
     "reviews": MessageLookupByLibrary.simpleMessage("Reviews"),
     "reviews_tip": MessageLookupByLibrary.simpleMessage(
       "Receive notifications when customers leave a review on your products",
     ),
     "sales": MessageLookupByLibrary.simpleMessage("Sales"),
+    "sales_trend": MessageLookupByLibrary.simpleMessage("Sales Trend"),
     "save": MessageLookupByLibrary.simpleMessage("Save"),
     "save_changes": MessageLookupByLibrary.simpleMessage("Save Changes"),
     "save_draft": MessageLookupByLibrary.simpleMessage("Save Draft?"),
@@ -881,6 +896,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "We implement advanced security technologies to protect your information from unauthorized access, loss, misuse, or disclosure.",
     ),
     "see_all": MessageLookupByLibrary.simpleMessage("See all"),
+    "see_it_now": MessageLookupByLibrary.simpleMessage("See it now"),
     "see_less": MessageLookupByLibrary.simpleMessage("See less"),
     "see_more": MessageLookupByLibrary.simpleMessage("See more"),
     "select": MessageLookupByLibrary.simpleMessage("Select"),
@@ -1011,11 +1027,19 @@ class MessageLookup extends MessageLookupByLibrary {
       "Please enter a label",
     ),
     "today": MessageLookupByLibrary.simpleMessage("Today"),
+    "top_buyers": MessageLookupByLibrary.simpleMessage("Top Buyers"),
+    "top_selling_products": MessageLookupByLibrary.simpleMessage(
+      "Top Selling Products",
+    ),
     "total": MessageLookupByLibrary.simpleMessage("Total"),
     "total_amount": MessageLookupByLibrary.simpleMessage("Total amount"),
     "total_orders": MessageLookupByLibrary.simpleMessage("Total orders"),
     "total_price": MessageLookupByLibrary.simpleMessage("Total price"),
     "total_quantity": MessageLookupByLibrary.simpleMessage("Total quantity"),
+    "total_quantity_sold": MessageLookupByLibrary.simpleMessage(
+      "Total quantity sold",
+    ),
+    "total_revenue": MessageLookupByLibrary.simpleMessage("Total Revenue"),
     "total_sales": MessageLookupByLibrary.simpleMessage("Total sales"),
     "track_your_order": MessageLookupByLibrary.simpleMessage(
       "Track Your Order",
@@ -1086,6 +1110,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "There are several reasons why your payment may be declined:\nInsufficient funds\nIncorrect card details\nExpired card\nIssues with your bank or payment provider Try verifying your details or contacting your bank for further assistance.",
     ),
     "withdraw": MessageLookupByLibrary.simpleMessage("Withdraw"),
+    "women": MessageLookupByLibrary.simpleMessage("Women"),
     "worldwide_market": MessageLookupByLibrary.simpleMessage(
       "Worldwide Marketplace",
     ),
@@ -1098,6 +1123,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "wrong_password": MessageLookupByLibrary.simpleMessage(
       "The password you typed is wrong",
     ),
+    "yearly": MessageLookupByLibrary.simpleMessage("Yearly"),
     "years": MessageLookupByLibrary.simpleMessage("years"),
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
     "yesterday": MessageLookupByLibrary.simpleMessage("Yesterday"),

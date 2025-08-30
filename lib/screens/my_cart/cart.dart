@@ -512,29 +512,38 @@ class _CartState extends State<Cart> with TickerProviderStateMixin {
                                                                 children: [
                                                                   SizedBox(
                                                                     width: 140,
-                                                                    child: Padding(
-                                                                      padding:
-                                                                          EdgeInsets.all(
-                                                                            10,
-                                                                          ),
-                                                                      child: ClipRRect(
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(
-                                                                              20,
+                                                                    height: 120,
+                                                                    child:
+                                                                        ProductCubit.get(
+                                                                              context,
+                                                                            )
+                                                                            .cartProducts[index]
+                                                                            .product
+                                                                            .images
+                                                                            .isNotEmpty
+                                                                        ? Padding(
+                                                                            padding: EdgeInsets.all(
+                                                                              10,
                                                                             ),
-                                                                        child: CachedNetworkImage(
-                                                                          imageUrl: ProductCubit.get(
-                                                                            context,
-                                                                          ).cartProducts[index].product.images.first,
-                                                                          fit: BoxFit
-                                                                              .cover,
-                                                                          height:
-                                                                              120,
-                                                                          width:
-                                                                              double.infinity,
-                                                                        ),
-                                                                      ),
-                                                                    ),
+                                                                            child: ClipRRect(
+                                                                              borderRadius: BorderRadius.circular(
+                                                                                20,
+                                                                              ),
+                                                                              child: CachedNetworkImage(
+                                                                                imageUrl: ProductCubit.get(
+                                                                                  context,
+                                                                                ).cartProducts[index].product.images.first,
+                                                                                fit: BoxFit.cover,
+                                                                                height: 120,
+                                                                                width: double.infinity,
+                                                                              ),
+                                                                            ),
+                                                                          )
+                                                                        : Center(
+                                                                            child: Icon(
+                                                                              IconlyBold.image,
+                                                                            ),
+                                                                          ),
                                                                   ),
                                                                   Expanded(
                                                                     child: Padding(

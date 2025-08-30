@@ -252,13 +252,13 @@ class OrderCubit extends Cubit<OrderState> {
       await NotificationCubit.instance.sendNotification(
         title: currentUserModel.username,
         body:
-            "${order.products.first.product.title} order status is ${status.name}",
+            "${order.products.first.product.title.trim()} order status is ${status.name}",
         userId: order.buyerId,
         notificationType: NotificationTypes.orderStatus,
         payload: jsonEncode({
           'type': NotificationTypes.orderStatus.name,
           'orderModel': order.toMap(),
-          'orderStatus': status.name,
+          'orderStatus': status.index,
         }),
       );
 
@@ -267,9 +267,9 @@ class OrderCubit extends Cubit<OrderState> {
         receiverType: 'user',
         title: currentUserModel.username,
         body:
-            "${order.products.first.product.title} order status is ${status.name}",
+            "${order.products.first.product.title.trim()} order status is ${status.name}",
         type: NotificationTypes.orderStatus,
-        payload: {'orderModel': order.toMap(), 'orderStatus': status.name},
+        payload: {'orderModel': order.toMap(), 'orderStatus': status.index},
       );
       emit(OrderChangeOrderStatusSuccessState());
     } catch (e) {
@@ -481,58 +481,28 @@ class OrderCubit extends Cubit<OrderState> {
       isScrollControlled: true,
       showDragHandle: true,
       backgroundColor: scaffoldColor,
-      enableDrag: false, // 🛑 ممنوع السحب للإغلاق
-      isDismissible: false, // 🛑 ممنوع الضغط برا للإغلاق
+      enableDrag: false,
+      isDismissible: false,
       builder: (BuildContext context) {
         return SafeArea(
           child: StatefulBuilder(
             builder: (context, setState) {
-              bool allRated = ratings.every((r) => r as double > 1);
-
-              void cacheValues() {
-                OrderCubit.get(context).ratingCache[orderId] = {
+              // Helper to update cached values
+              void updateCache() {
+                ratingCache[orderId] = {
                   'ratings': ratings,
                   'comments': comments,
                   'images': images,
                 };
               }
 
-              return WillPopScope(
-                onWillPop: () async {
-                  final result = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) {
-                      return AlertDialog(
-                        title: Text(S.of(context).save_progress),
-                        content: Text(S.of(context).save_review_as_draft_tip),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(ctx).pop(false),
-                            child: Text(S.of(context).discard),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.of(ctx).pop(true),
-                            child: Text(S.of(context).keep),
-                          ),
-                        ],
-                      );
-                    },
-                  );
+              bool allRated = ratings.every((r) => r as double > 0);
 
-                  if (result == true) {
-                    cacheValues(); // ✅ Save
-                  } else {
-                    OrderCubit.get(
-                      context,
-                    ).ratingCache.remove(orderId); // ❌ Discard
-                  }
-
-                  return result != null;
-                },
+              return SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.only(
+                  padding: EdgeInsets.only(
                     top: 20,
-                    bottom: 40,
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
                     left: 16,
                     right: 16,
                   ),
@@ -556,7 +526,6 @@ class OrderCubit extends Cubit<OrderState> {
                           itemBuilder: (context, productIndex) {
                             final product = order.products[productIndex];
                             return Column(
-                              spacing: 10,
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
                                 // Product Info
@@ -574,22 +543,18 @@ class OrderCubit extends Cubit<OrderState> {
                                           child: CachedNetworkImage(
                                             imageUrl:
                                                 product.product.images.first,
-                                            fit: BoxFit.cover,
                                             width: 100,
                                             height: 100,
+                                            fit: BoxFit.cover,
                                             progressIndicatorBuilder:
-                                                (
-                                                  context,
-                                                  url,
-                                                  downloadProgress,
-                                                ) => shimmerPlaceholder(
-                                                  width: 100,
-                                                  height: 100,
-                                                  radius: 15,
-                                                ),
-                                            errorWidget:
-                                                (context, url, error) =>
-                                                    const Icon(Icons.error),
+                                                (_, __, progress) =>
+                                                    shimmerPlaceholder(
+                                                      width: 100,
+                                                      height: 100,
+                                                      radius: 15,
+                                                    ),
+                                            errorWidget: (_, __, ___) =>
+                                                const Icon(Icons.error),
                                           ),
                                         ),
                                         const SizedBox(width: 12),
@@ -632,6 +597,8 @@ class OrderCubit extends Cubit<OrderState> {
                                   ),
                                 ),
 
+                                const SizedBox(height: 10),
+
                                 // Rating Bar
                                 RatingBar(
                                   glowColor: primaryColor,
@@ -660,10 +627,12 @@ class OrderCubit extends Cubit<OrderState> {
                                   onRatingUpdate: (rating) {
                                     setState(() {
                                       ratings[productIndex] = rating;
-                                      cacheValues();
+                                      updateCache();
                                     });
                                   },
                                 ),
+
+                                const SizedBox(height: 10),
 
                                 // Comment
                                 TextFormField(
@@ -674,76 +643,54 @@ class OrderCubit extends Cubit<OrderState> {
                                   ),
                                   maxLines: 3,
                                   onChanged: (val) {
-                                    comments[productIndex] = val;
-                                    cacheValues();
+                                    setState(() {
+                                      comments[productIndex] = val;
+                                      updateCache();
+                                    });
                                   },
                                 ),
+
                                 const SizedBox(height: 10),
 
+                                // Images
                                 images[productIndex].isEmpty
                                     ? GestureDetector(
                                         onTap: () async {
-                                          final picked = await showModalBottomSheet(
-                                            context: context,
-                                            showDragHandle: true,
-                                            backgroundColor: scaffoldColor,
-                                            builder: (_) {
-                                              return SafeArea(
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    PickImageSource(
-                                                      galleryButton: () async {
-                                                        final file = await picker
-                                                            .pickImage(
-                                                              source:
-                                                                  ImageSource
-                                                                      .gallery,
-                                                            );
-                                                        Navigator.pop(
-                                                          context,
-                                                          file,
+                                          final picked =
+                                              await showModalBottomSheet<
+                                                XFile?
+                                              >(
+                                                context: context,
+                                                builder: (_) => PickImageSource(
+                                                  galleryButton: () async {
+                                                    final file = await picker
+                                                        .pickImage(
+                                                          source: ImageSource
+                                                              .gallery,
                                                         );
-                                                      },
-                                                      cameraButton: () async {
-                                                        final file = await picker
-                                                            .pickImage(
-                                                              source:
-                                                                  ImageSource
-                                                                      .camera,
-                                                            );
-                                                        Navigator.pop(
-                                                          context,
-                                                          file,
+                                                    Navigator.pop(
+                                                      context,
+                                                      file,
+                                                    );
+                                                  },
+                                                  cameraButton: () async {
+                                                    final file = await picker
+                                                        .pickImage(
+                                                          source: ImageSource
+                                                              .camera,
                                                         );
-                                                      },
-                                                    ),
-                                                    // ListTile(
-                                                    //   leading: const Icon(Icons.image, color: primaryColor, size: 30),
-                                                    //   title: Text(S.of(context).pick_image),
-                                                    //   subtitle: Text(S.of(context).send_image_to_customer),
-                                                    //   trailing: Icon(
-                                                    //     forwardIcon(),
-                                                    //     color: primaryColor.withOpacity(0.7),
-                                                    //   ),
-                                                    //   onTap: () {
-                                                    //     cubit.pickAndSendImage(chatId: chatId);
-                                                    //     Navigator.pop(context);
-                                                    //   },
-                                                    // ),
-                                                  ],
+                                                    Navigator.pop(
+                                                      context,
+                                                      file,
+                                                    );
+                                                  },
                                                 ),
                                               );
-                                            },
-                                          );
-
                                           if (picked != null) {
-                                            setState(
-                                              () => images[productIndex].add(
-                                                picked,
-                                              ),
-                                            );
+                                            setState(() {
+                                              images[productIndex].add(picked);
+                                              updateCache();
+                                            });
                                           }
                                         },
                                         child: Container(
@@ -769,9 +716,7 @@ class OrderCubit extends Cubit<OrderState> {
                                           ),
                                         ),
                                       )
-                                    :
-                                      // Image List with Add + Delete
-                                      SizedBox(
+                                    : SizedBox(
                                         height: 100,
                                         child: ListView(
                                           scrollDirection: Axis.horizontal,
@@ -837,7 +782,7 @@ class OrderCubit extends Cubit<OrderState> {
                                                     images[productIndex].add(
                                                       picked,
                                                     );
-                                                    cacheValues();
+                                                    updateCache();
                                                   });
                                                 }
                                               },
@@ -898,7 +843,7 @@ class OrderCubit extends Cubit<OrderState> {
                                                               .removeAt(
                                                                 imgIndex,
                                                               );
-                                                          cacheValues();
+                                                          updateCache();
                                                         });
                                                       },
                                                       child: Container(
@@ -940,10 +885,10 @@ class OrderCubit extends Cubit<OrderState> {
                         width: double.infinity,
                         child: TextButton(
                           style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all(
+                            backgroundColor: MaterialStateProperty.all(
                               allRated ? primaryColor : Colors.grey.shade400,
                             ),
-                            foregroundColor: WidgetStateProperty.all(
+                            foregroundColor: MaterialStateProperty.all(
                               Colors.white,
                             ),
                           ),
@@ -959,21 +904,6 @@ class OrderCubit extends Cubit<OrderState> {
                                     final comment = comments[i];
                                     final imageList = images[i];
 
-                                    for (int j = 0; j < imageList.length; j++) {
-                                      await OrderCubit.get(
-                                        context,
-                                      ).submitRating(
-                                        productModel: product.product,
-                                        rating: rating,
-                                        index: index,
-                                        comment: comment,
-                                        imageFile: imageList[j],
-                                        updateRated:
-                                            i == order.products.length - 1 &&
-                                            j == imageList.length - 1,
-                                      );
-                                    }
-
                                     if (imageList.isEmpty) {
                                       await OrderCubit.get(
                                         context,
@@ -986,20 +916,37 @@ class OrderCubit extends Cubit<OrderState> {
                                         updateRated:
                                             i == order.products.length - 1,
                                       );
+                                    } else {
+                                      for (
+                                        int j = 0;
+                                        j < imageList.length;
+                                        j++
+                                      ) {
+                                        await OrderCubit.get(
+                                          context,
+                                        ).submitRating(
+                                          productModel: product.product,
+                                          rating: rating,
+                                          index: index,
+                                          comment: comment,
+                                          imageFile: imageList[j],
+                                          updateRated:
+                                              i == order.products.length - 1 &&
+                                              j == imageList.length - 1,
+                                        );
+                                      }
                                     }
                                   }
 
-                                  // Clear cached data after submission
-                                  OrderCubit.get(
-                                    context,
-                                  ).ratingCache.remove(orderId);
+                                  // Clear cache
+                                  ratingCache.remove(orderId);
                                   if (!context.mounted) return;
                                   Navigator.pop(context);
                                 }
-                              : null, // ❌ disable if not all rated
+                              : null,
                           child: Text(
                             S.of(context).submit_all,
-                            style: TextStyle(fontSize: 20.0),
+                            style: const TextStyle(fontSize: 20.0),
                           ),
                         ),
                       ),

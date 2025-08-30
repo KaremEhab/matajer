@@ -6,6 +6,7 @@ import 'package:matajer/constants/vars.dart';
 import 'package:matajer/cubit/order/order_cubit.dart';
 import 'package:matajer/cubit/product/product_cubit.dart';
 import 'package:matajer/generated/l10n.dart';
+import 'package:matajer/main.dart';
 import 'package:matajer/screens/home/widgets/home/home_appBar.dart';
 import 'package:matajer/screens/home/widgets/home/home_category_Text_widget.dart';
 import 'package:matajer/screens/home/widgets/home/home_category_selector.dart';
@@ -81,7 +82,8 @@ class HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
   }
 
   void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
+    if (!mounted) return; // ✅ prevent calling on disposed state
+    scaffoldMessengerKey.currentState?.showSnackBar(
       SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
     );
   }

@@ -211,6 +211,31 @@ class _WalletState extends State<Wallet> {
               ),
 
               // Transactions list
+              if (WalletCubit.get(context).walletList.isEmpty)
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(height: 100),
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          color: primaryColor,
+                          size: 50,
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          S.of(context).empty_transactions,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: textColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               if (display)
                 SliverSafeArea(
                   sliver: SliverList(
