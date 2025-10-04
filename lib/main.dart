@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,12 +11,26 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:matajer/cubit/comments/comments_cubit.dart';
 
 import 'package:matajer/constants/bloc_observer.dart';
 import 'package:matajer/constants/cache_helper.dart';
 import 'package:matajer/constants/theme_data.dart';
 import 'package:matajer/constants/vars.dart';
+
+import 'package:matajer/cubit/comments/comments_cubit.dart';
+import 'package:matajer/cubit/analytics/analytics_cubit.dart';
+import 'package:matajer/cubit/chat/chat_cubit.dart';
+import 'package:matajer/cubit/favorites/favorites_cubit.dart';
+import 'package:matajer/cubit/notifications/notification_cubit.dart';
+import 'package:matajer/cubit/wallet/wallet_cubit.dart';
+import 'package:matajer/cubit/register/register_cubit.dart';
+import 'package:matajer/cubit/login/login_cubit.dart';
+import 'package:matajer/cubit/user/user_cubit.dart';
+import 'package:matajer/cubit/product/product_cubit.dart';
+import 'package:matajer/cubit/order/order_cubit.dart';
+import 'package:matajer/cubit/filter/filter_cubit.dart';
+import 'package:matajer/cubit/reviews/reviews_cubit.dart';
+import 'package:matajer/new_chat/chat_cubit.dart';
 
 import 'package:matajer/firebase_options.dart';
 import 'package:matajer/generated/l10n.dart';
@@ -31,21 +46,14 @@ import 'package:matajer/screens/reviews/reviews.dart';
 import 'package:matajer/screens/splash/matajer_splash.dart';
 import 'package:matajer/screens/whatsApp/chat_page.dart';
 
-import 'package:matajer/cubit/analytics/analytics_cubit.dart';
-import 'package:matajer/cubit/chat/chat_cubit.dart';
-import 'package:matajer/cubit/favorites/favorites_cubit.dart';
-import 'package:matajer/cubit/notifications/notification_cubit.dart';
-import 'package:matajer/cubit/wallet/wallet_cubit.dart';
-import 'package:matajer/cubit/register/register_cubit.dart';
-import 'package:matajer/cubit/login/login_cubit.dart';
-import 'package:matajer/cubit/user/user_cubit.dart';
-import 'package:matajer/cubit/product/product_cubit.dart';
-import 'package:matajer/cubit/order/order_cubit.dart';
-import 'package:matajer/cubit/filter/filter_cubit.dart';
-import 'package:matajer/cubit/reviews/reviews_cubit.dart';
-import 'package:matajer/new_chat/chat_cubit.dart';
-
 import 'cubit/language/locale_cubit.dart';
+
+// ───────────────────────────────────────────────
+
+bool get isIOSSimulator {
+  return Platform.isIOS &&
+      Platform.environment.containsKey('SIMULATOR_DEVICE_NAME');
+}
 
 // ───────────────────────────────────────────────
 // 🔔 Global Keys
@@ -108,7 +116,6 @@ Future<void> showLocalNotification(RemoteMessage message) async {
   final data = message.data;
   final type = data['type'];
 
-  // 👇 Add reply action ONLY if type == chat
   final notificationDetails = type == 'chat'
       ? const NotificationDetails(
           android: AndroidNotificationDetails(
@@ -177,9 +184,11 @@ void handleNotificationTap(String? payload) {
         break;
 
       case NotificationTypes.newOrder:
+        // Adjusted: using safe access for map entry
+        final orderMap = jsonDecodeIfNeeded(data['orderModel']);
         final order = OrderModel.fromJson(
-          Map<String, dynamic>.from(jsonDecodeIfNeeded(data['orderModel'])),
-          data['orderModel']['id'],
+          Map<String, dynamic>.from(orderMap),
+          orderMap['id'],
         );
         navigator.pushReplacementIfNeeded(
           MaterialPageRoute(builder: (_) => OrderDetailsScreen(order: order)),
@@ -224,9 +233,11 @@ void handleNotificationTap(String? payload) {
         break;
 
       case NotificationTypes.orderStatus:
+        // Adjusted: using safe access for map entry
+        final orderMap = jsonDecodeIfNeeded(data['orderModel']);
         final order = OrderModel.fromJson(
-          Map<String, dynamic>.from(jsonDecodeIfNeeded(data['orderModel'])),
-          data['orderModel']['id'],
+          Map<String, dynamic>.from(orderMap),
+          orderMap['id'],
         );
         navigator.pushReplacementIfNeeded(
           MaterialPageRoute(builder: (_) => OrderDetails(order: order)),
@@ -242,7 +253,6 @@ void handleNotificationTap(String? payload) {
   }
 }
 
-// Helper
 dynamic jsonDecodeIfNeeded(dynamic input) =>
     input is String ? jsonDecode(input) : input;
 
@@ -269,7 +279,13 @@ late final bool isInitialInternetAvailable;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await setupFlutterNotifications();
+
+  if (!isIOSSimulator) {
+    await setupFlutterNotifications();
+  } else {
+    log("⚠️ Skipping local notifications setup on iOS Simulator");
+  }
+
   Bloc.observer = MyBlocObserver();
   await CacheHelper.init();
   await FirebaseAppCheck.instance.activate(
@@ -278,15 +294,6 @@ Future<void> main() async {
   );
 
   isInitialInternetAvailable = await hasInternetConnection();
-
-  if (isInitialInternetAvailable) {
-    try {
-      fcmDeviceToken = await FirebaseMessaging.instance.getToken() ?? '';
-      accessToken = await AccessTokenFirebase().getAccessToken();
-    } catch (e) {
-      log("⚠️ Token fetch failed: $e");
-    }
-  }
 
   // Cache
   uId = await CacheHelper.getData(key: 'uId') ?? '';
@@ -297,13 +304,61 @@ Future<void> main() async {
       await CacheHelper.getData(key: 'autoAcceptOrders') ?? false;
   skipOnboarding = await CacheHelper.getData(key: 'skipOnboarding') ?? false;
 
-  runApp(const MyApp());
+  String? finalFcmToken;
+
+  if (isInitialInternetAvailable) {
+    try {
+      // 👇 Request iOS notification permission
+      if (Platform.isIOS && !isIOSSimulator) {
+        final settings = await FirebaseMessaging.instance.requestPermission();
+        log("🔔 iOS permission: ${settings.authorizationStatus}");
+
+        await FirebaseMessaging.instance
+            .setForegroundNotificationPresentationOptions(
+              alert: true,
+              badge: true,
+              sound: true,
+            );
+
+        // Add a small delay to allow APNS to register before fetching the token
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        // Fetch APNs token (optional, but good for debugging)
+        final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+        log("📲 APNs token: $apnsToken");
+
+        // 🚨 Fetch the FCM token after a small delay
+        finalFcmToken = await FirebaseMessaging.instance.getToken();
+      } else if (isIOSSimulator) {
+        log("⚠️ Running on iOS Simulator → Skipping APNs and FCM token setup");
+      } else {
+        // Android case
+        finalFcmToken = await FirebaseMessaging.instance.getToken();
+      }
+
+      if (finalFcmToken != null) {
+        log("🔑 Fetched FCM Token: $finalFcmToken");
+      }
+    } catch (e) {
+      // This catch block handles the APNS token error gracefully
+      log("⚠️ Token fetch failed: $e");
+    }
+  }
+
+  runApp(
+    MyApp(
+      // Pass the potentially null token
+      initialFcmToken: finalFcmToken,
+    ),
+  );
 }
 
 // ───────────────────────────────────────────────
 // 🧱 App Widget
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String? initialFcmToken;
+
+  const MyApp({super.key, this.initialFcmToken});
 
   @override
   Widget build(BuildContext context) {
@@ -325,27 +380,53 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => ReviewsCubit()),
         BlocProvider(create: (_) => CommentsCubit()),
       ],
-      child: ScreenUtilInit(
-        designSize: const Size(430, 932),
-        minTextAdapt: true,
-        splitScreenMode: true,
-        builder: (_, __) {
-          return BlocBuilder<LocaleCubit, Locale>(
-            builder: (context, locale) {
-              return MaterialApp(
-                navigatorKey: navigatorKey,
-                debugShowCheckedModeBanner: false,
-                scaffoldMessengerKey: scaffoldMessengerKey,
-                locale: locale,
-                supportedLocales: S.delegate.supportedLocales,
-                localizationsDelegates: const [
-                  S.delegate,
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                ],
-                theme: Styles.themeData(context: context),
-                home: const MatajerSplash(),
+      child: Builder(
+        // 🚨 Added Builder to access context before ScreenUtilInit
+        builder: (context) {
+          // 🚨 CRITICAL FIX: Update FCM token here using the UserCubit
+          if (initialFcmToken != null && uId.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              // This relies on the updateUserFCMToken method being implemented in UserCubit
+              UserCubit.get(
+                context,
+              ).updateUserFCMToken(token: initialFcmToken!);
+            });
+          }
+
+          // 🚨 Optional: Listen for token refresh and update the user's profile
+          // IMPORTANT: Only listen if not running on simulator
+          if (!isIOSSimulator) {
+            FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+              if (uId.isNotEmpty) {
+                UserCubit.get(context).updateUserFCMToken(token: newToken);
+                log("🔄 FCM Token Refreshed: $newToken");
+              }
+            });
+          }
+
+          return ScreenUtilInit(
+            designSize: const Size(430, 932),
+            minTextAdapt: true,
+            splitScreenMode: true,
+            builder: (_, __) {
+              return BlocBuilder<LocaleCubit, Locale>(
+                builder: (context, locale) {
+                  return MaterialApp(
+                    navigatorKey: navigatorKey,
+                    debugShowCheckedModeBanner: false,
+                    scaffoldMessengerKey: scaffoldMessengerKey,
+                    locale: locale,
+                    supportedLocales: S.delegate.supportedLocales,
+                    localizationsDelegates: const [
+                      S.delegate,
+                      GlobalMaterialLocalizations.delegate,
+                      GlobalWidgetsLocalizations.delegate,
+                      GlobalCupertinoLocalizations.delegate,
+                    ],
+                    theme: Styles.themeData(context: context),
+                    home: const MatajerSplash(),
+                  );
+                },
               );
             },
           );

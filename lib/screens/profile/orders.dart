@@ -1,4 +1,3 @@
-
 import 'package:conditional_builder_null_safety/conditional_builder_null_safety.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -55,6 +54,40 @@ class _OrdersHistoryState extends State<OrdersHistory> {
           builder: (context) {
             if (orders.isEmpty) {
               return Scaffold(
+                appBar: AppBar(
+                  forceMaterialTransparency: true,
+                  leadingWidth: 52,
+                  leading: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      lang == 'en' ? 7 : 0,
+                      6,
+                      lang == 'en' ? 0 : 7,
+                      6,
+                    ),
+                    child: Material(
+                      color: lightGreyColor.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(12.r),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12.r),
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: Center(
+                          child: Icon(backIcon(), color: textColor, size: 26),
+                        ),
+                      ),
+                    ),
+                  ),
+                  centerTitle: true,
+                  title: Text(
+                    S.of(context).orders_history,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: textColor,
+                    ),
+                  ),
+                ),
                 body: SafeArea(
                   child: Center(
                     child: Column(
@@ -140,7 +173,7 @@ class _OrdersHistoryState extends State<OrdersHistory> {
                                 ),
                               ),
                               Text(
-                                currentUserModel.currentAddress,
+                                currentUserModel.currentAddress!['name'],
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,

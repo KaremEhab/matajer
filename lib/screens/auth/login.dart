@@ -228,7 +228,9 @@ class _LoginState extends State<Login> {
                                     ),
                                     validator: (pass) {
                                       if (pass!.isEmpty) {
-                                        return S.of(context).password_is_required;
+                                        return S
+                                            .of(context)
+                                            .password_is_required;
                                       }
                                       return null;
                                     },
@@ -479,61 +481,64 @@ class _LoginState extends State<Login> {
                                   ),
                                 ),
                               ),
-                            if (Platform.isIOS) SizedBox(height: 15.h),
+                            if (!Platform.isIOS) SizedBox(height: 15.h),
                             // google Icon
-                            Center(
-                              child: Material(
-                                color: transparentColor,
-                                borderRadius: BorderRadius.circular(20),
-                                child: InkWell(
+                            if (!Platform.isIOS)
+                              Center(
+                                child: Material(
+                                  color: transparentColor,
                                   borderRadius: BorderRadius.circular(20),
-                                  onTap: !isInitialInternetAvailable
-                                      ? () {
-                                          snack(context);
-                                        }
-                                      : () {
-                                          isGuest = false;
-                                          CacheHelper.saveData(
-                                            key: "isGuest",
-                                            value: isGuest,
-                                          );
-                                          LoginCubit.get(
-                                            context,
-                                          ).googleSignIn(context);
-                                        },
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 20),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: greyColor.withOpacity(0.3),
-                                        strokeAlign:
-                                            BorderSide.strokeAlignOutside,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(20),
+                                    onTap: !isInitialInternetAvailable
+                                        ? () {
+                                            snack(context);
+                                          }
+                                        : () {
+                                            isGuest = false;
+                                            CacheHelper.saveData(
+                                              key: "isGuest",
+                                              value: isGuest,
+                                            );
+                                            LoginCubit.get(
+                                              context,
+                                            ).googleSignIn(context);
+                                          },
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 20,
                                       ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        SvgPicture.asset(
-                                          'images/google-icon.svg',
-                                          width: 25,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: greyColor.withOpacity(0.3),
+                                          strokeAlign:
+                                              BorderSide.strokeAlignOutside,
                                         ),
-                                        SizedBox(width: 12.w),
-                                        Text(
-                                          S.of(context).continue_google,
-                                          style: TextStyle(
-                                            color: textColor,
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w700,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          SvgPicture.asset(
+                                            'images/google-icon.svg',
+                                            width: 25,
                                           ),
-                                        ),
-                                      ],
+                                          SizedBox(width: 12.w),
+                                          Text(
+                                            S.of(context).continue_google,
+                                            style: TextStyle(
+                                              color: textColor,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
                             SizedBox(height: 15.h),
                             // apple Icon
                             // facebook Icon

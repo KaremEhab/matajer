@@ -8,6 +8,10 @@ import 'package:matajer/constants/functions.dart';
 import 'package:matajer/constants/vars.dart';
 import 'package:matajer/cubit/favorites/favorites_cubit.dart';
 import 'package:matajer/cubit/favorites/favorites_state.dart';
+import 'package:matajer/cubit/product/product_cubit.dart';
+import 'package:matajer/cubit/product/product_cubit.dart';
+import 'package:matajer/cubit/product/product_state.dart';
+import 'package:matajer/cubit/user/user_state.dart';
 import 'package:matajer/generated/l10n.dart';
 import 'package:matajer/models/shop_model.dart';
 import 'package:matajer/screens/favourites/fav_shops.dart';
@@ -34,9 +38,14 @@ class _ShopListCardState extends State<ShopListCard> {
   late final num numberOfRating;
   late final num sumOfRating;
 
+  final userEmirate = currentUserModel.emirate;
+  late Map<String, dynamic> option;
+  num deliveryDays = 0;
+
   @override
   void initState() {
     super.initState();
+
     final favCubit = FavoritesCubit.get(context);
     final shopId = widget.shopModel.shopId;
 
@@ -51,6 +60,17 @@ class _ShopListCardState extends State<ShopListCard> {
 
   @override
   Widget build(BuildContext context) {
+    return BlocConsumer<ProductCubit, ProductState>(
+  listener: (context, state) {
+    if(state is ProductGetSellersSuccessState){
+      option = widget.shopModel.deliveryOptions
+          .cast<Map<String, dynamic>>()
+          .firstWhere((opt) => opt['emirate'] == userEmirate);
+
+      deliveryDays = option['days'] ?? 0;
+    }
+  },
+  builder: (context, state) {
     return RepaintBoundary(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(7, 2, 7, 8),
@@ -141,39 +161,62 @@ class _ShopListCardState extends State<ShopListCard> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               // Subcategories
-                              Wrap(
-                                spacing: 6,
-                                runSpacing: 6,
-                                children: widget.shopModel.subcategories
-                                    .map((e) => e.trim().toLowerCase())
-                                    .toSet() // Remove duplicates
-                                    .map((sub) {
-                                      final capitalized = sub.isNotEmpty
-                                          ? sub[0].toUpperCase() +
-                                                sub.substring(1)
-                                          : '';
-                                      return Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: greyColor.withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(
-                                            5.r,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          capitalized,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: greyColor,
-                                          ),
-                                        ),
-                                      );
-                                    })
-                                    .toList(),
+                              // Wrap(
+                              //   spacing: 6,
+                              //   runSpacing: 6,
+                              //   children: widget.shopModel.subcategories
+                              //       .map((e) => e.trim().toLowerCase())
+                              //       .toSet() // Remove duplicates
+                              //       .map((sub) {
+                              //         final capitalized = sub.isNotEmpty
+                              //             ? sub[0].toUpperCase() +
+                              //                   sub.substring(1)
+                              //             : '';
+                              //         return Container(
+                              //           padding: const EdgeInsets.symmetric(
+                              //             horizontal: 12,
+                              //             vertical: 4,
+                              //           ),
+                              //           decoration: BoxDecoration(
+                              //             color: greyColor.withOpacity(0.15),
+                              //             borderRadius: BorderRadius.circular(
+                              //               5.r,
+                              //             ),
+                              //           ),
+                              //           child: Text(
+                              //             capitalized,
+                              //             style: TextStyle(
+                              //               fontSize: 12,
+                              //               fontWeight: FontWeight.w600,
+                              //               color: greyColor,
+                              //             ),
+                              //           ),
+                              //         );
+                              //       })
+                              //       .toList(),
+                              // ),
+
+                              // --- Tags section ---
+                              Expanded(
+                                child: Wrap(
+                                  spacing: 12,
+                                  runSpacing: 8,
+                                  alignment: WrapAlignment.start,
+                                  children: [
+                                    buildTag(
+                                      Icons.verified_outlined,
+                                      S.of(context).good_quality,
+                                    ),
+                                    buildTag(
+                                      Icons.access_time,
+                                      widget.shopModel.formattedAvgResponseTime,
+                                    ),
+                                    buildTag(
+                                      Icons.local_shipping_outlined,
+                                      '$deliveryDays ${S.of(context).days}',
+                                    ),
+                                  ],
+                                ),
                               ),
 
                               // Rating
@@ -448,6 +491,8 @@ class _ShopListCardState extends State<ShopListCard> {
         ),
       ),
     );
+  },
+);
   }
 }
 

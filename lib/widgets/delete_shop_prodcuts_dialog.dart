@@ -38,6 +38,7 @@ class DeleteShopAndAllProductsDialog {
               spacing: 5,
               children: [
                 // 🧹 Delete Products Only
+                if(ProductCubit.get(context).products.isNotEmpty)
                 Expanded(
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(

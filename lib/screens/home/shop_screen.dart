@@ -81,8 +81,15 @@ class ShopScreenState extends State<ShopScreen> {
 
   @override
   void dispose() {
+    // Dispose the ScrollController
     _scrollController.dispose();
+
+    // Dispose the ValueNotifier
     shopScrollOffsetNotifier.dispose();
+
+    // 🚨 Dispose the PageController
+    pageController.dispose();
+
     super.dispose();
   }
 

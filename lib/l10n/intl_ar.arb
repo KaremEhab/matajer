@@ -641,7 +641,20 @@
   "yearly": "سنوي",
 
   "place_order": "إتمام الطلب",
-  "see_it_now": "شاهدها الآن"
+  "see_it_now": "شاهدها الآن",
 
+  "enter_address_name": "أدخل اسم لعنوانك",
+  "location_already_saved": "العنوان موجود بالفعل",
+  "select_this_location": "أختر هذا العنوان",
+
+  "second": "{count, plural, zero {ثواني} one {ثانية} two {ثانيتين} few {ثوانٍ} many {ثانية} other {ثانية}}",
+  "minute": "{count, plural, zero {دقائق} one {دقيقة} two {دقيقتين} few {دقائق} many {دقيقة} other {دقيقة}}",
+  "hour": "{count, plural, zero {ساعات} one {ساعة} two {ساعتين} few {ساعات} many {ساعة} other {ساعة}}",
+  "day": "{count, plural, zero {أيام} one {يوم} two {يومين} few {أيام} many {يوم} other {يوم}}",
+  "week": "{count, plural, one {أسبوع} two {أسبوعين} few {أسابيع} other {أسبوع}}",
+  "month": "{count, plural, one {شهر} two {شهرين} few {أشهر} other {شهر}}",
+
+  "no_fav_shops": "لا يوجد متاجر مفضلة",
+  "no_fav_products": "لا يوجد منتجات مفضلة"
 }
 

@@ -147,6 +147,7 @@ class _CheckoutState extends State<Checkout> {
                                     await ProductCubit.get(
                                       context,
                                     ).addNewAddress(
+                                      name: "",
                                       address: addressController.text,
                                     );
                                     if (!context.mounted) return;
@@ -203,7 +204,7 @@ class _CheckoutState extends State<Checkout> {
                               onTap: () async {
                                 await ProductCubit.get(
                                   context,
-                                ).setCurrentAddress(address: address);
+                                ).setCurrentAddress(addressObj: address);
                                 log(
                                   "1- Current Address is: ${currentUserModel.currentAddress}",
                                 );
@@ -222,18 +223,18 @@ class _CheckoutState extends State<Checkout> {
                                                 size: 28,
                                                 color: textColor,
                                               )
-                                            : Radio<String>(
+                                            : Radio<Map<String, dynamic>>(
                                                 value: address,
                                                 groupValue: currentUserModel
-                                                    .currentAddress,
+                                                    .currentAddress!['name'],
                                                 onChanged: (value) async {
                                                   await ProductCubit.get(
                                                     context,
                                                   ).setCurrentAddress(
-                                                    address: value!,
+                                                    addressObj: value!,
                                                   );
                                                   log(
-                                                    "2- Current Address is: ${currentUserModel.currentAddress}",
+                                                    "2- Current Address is: ${currentUserModel.currentAddress!['name']}",
                                                   );
                                                 },
                                               ),
@@ -253,7 +254,7 @@ class _CheckoutState extends State<Checkout> {
                                               ),
                                             ),
                                             Text(
-                                              address,
+                                              address["name"],
                                               style: TextStyle(
                                                 fontSize: 15,
                                                 fontWeight: FontWeight.w500,
@@ -271,7 +272,7 @@ class _CheckoutState extends State<Checkout> {
                                         TextEditingController
                                         addressController =
                                             TextEditingController(
-                                              text: address,
+                                              text: address['name'],
                                             );
                                         AlertDialog alert = AlertDialog(
                                           title: Text(
@@ -323,8 +324,7 @@ class _CheckoutState extends State<Checkout> {
                                                   context,
                                                 ).changeSpecificAddress(
                                                   index: index,
-                                                  newAddress:
-                                                      addressController.text,
+                                                  addressObj: address,
                                                 );
                                                 if (!context.mounted) return;
                                                 Navigator.pop(context);

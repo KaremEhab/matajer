@@ -319,9 +319,11 @@ class LoginCubit extends Cubit<LoginState> {
     );
 
     // Create an `OAuthCredential` from the credential returned by Apple.
-    final oauthCredential = OAuthProvider(
-      "apple.com",
-    ).credential(idToken: appleCredential.identityToken, rawNonce: rawNonce);
+    final oauthCredential = OAuthProvider("apple.com").credential(
+      idToken: appleCredential.identityToken,
+      rawNonce: rawNonce,
+      accessToken: appleCredential.authorizationCode,
+    );
 
     // Sign in the user with Firebase. If the nonce we generated earlier does
     // not match the nonce in `appleCredential.identityToken`, sign in will fail.
@@ -344,15 +346,14 @@ class LoginCubit extends Cubit<LoginState> {
         if (!value.exists) {
           navigateAndFinish(
             context: context,
-            screen: const PhoneNumberPage(
-              hideBackButton: true,
-              displaySkipBtn: true,
+            screen: SignUp(
+              socialInfo: true,
+              username: username,
+              profilePic: userCredential.user!.photoURL,
+              phoneNumber: userCredential.user!.phoneNumber,
+              email: userCredential.user!.email!,
+              uId: uId,
             ),
-          );
-          await RegisterCubit.get(context).userCreate(
-            username: username,
-            email: userCredential.user!.email!,
-            userId: uId,
           );
         } else {
           await Future.wait([

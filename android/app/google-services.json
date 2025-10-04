@@ -7,17 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:63640744288:android:959969fbbdc31e8183ae05",
+        "mobilesdk_app_id": "1:63640744288:android:8e7b86543198ee8183ae05",
         "android_client_info": {
-          "package_name": "com.matajer.matajer"
+          "package_name": "com.matajir.matajir"
         }
       },
       "oauth_client": [
         {
-          "client_id": "63640744288-2pphha6cmbh7cbn7fql07qp03vt0t5vg.apps.googleusercontent.com",
+          "client_id": "63640744288-lbbbbtb5v14s6v957q4sa2bh75dkg52n.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.matajer.matajer",
+            "package_name": "com.matajir.matajir",
             "certificate_hash": "9bdf905b26e94d6c2609e15b3dca176469613dbb"
           }
         },

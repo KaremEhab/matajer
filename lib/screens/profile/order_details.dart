@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconly/iconly.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/widgets.dart' as direction;
 import 'package:matajer/constants/colors.dart';
 import 'package:matajer/constants/functions.dart';
 import 'package:matajer/constants/vars.dart';
@@ -11,12 +12,22 @@ import 'package:matajer/cubit/product/product_cubit.dart';
 import 'package:matajer/cubit/product/product_state.dart';
 import 'package:matajer/cubit/user/user_cubit.dart';
 import 'package:matajer/generated/l10n.dart';
+import 'package:matajer/models/cart_product_item_model.dart';
 import 'package:matajer/models/order_model.dart';
+import 'package:matajer/models/product_model.dart';
+import 'package:matajer/models/shop_model.dart';
+import 'package:matajer/screens/layout.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OrderDetails extends StatefulWidget {
-  const OrderDetails({super.key, required this.order, this.orderStatus});
+  const OrderDetails({
+    super.key,
+    this.goBack = true,
+    required this.order,
+    this.orderStatus,
+  });
 
+  final bool goBack;
   final OrderModel order;
   final OrderStatus? orderStatus;
 
@@ -28,33 +39,68 @@ class _OrderDetailsState extends State<OrderDetails> {
   final PageController _pageController = PageController();
   int totalQuantity = 0;
   int _currentProductIndex = 0; // Track current page
-  num total = 0;
-  num appCommission = 0;
+
   List<num> payPrice = [0, 5, 10, 0];
 
-  void calculations() {
-    totalQuantity = widget.order.products.fold(
-      0,
-      (sum, product) => sum + product.quantity,
+  num total = 0;
+  num appCommission = 0;
+
+  // void calculations() {
+  //   totalQuantity = widget.order.products.fold(
+  //     0,
+  //     (sum, product) => sum + product.quantity,
+  //   );
+  //
+  //   total = 0;
+  //   payPrice[0] = widget.order.price;
+  //   for (int i = 0; i < payPrice.length - 2; i++) {
+  //     total += payPrice[i];
+  //   }
+  //   payPrice[2] = total * appCommission / 100;
+  //   payPrice[3] = total * 5 / 100;
+  //   total += payPrice[3] + payPrice[2];
+  // }
+
+  late ShopModel shopModel;
+  late CartProductItemModel currentProduct;
+  final userEmirate = currentUserModel.emirate;
+
+  num deliveryDays = 0;
+  num deliveryPrice = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    currentProduct = widget.order.products[_currentProductIndex];
+    getShopData();
+  }
+
+  Future<void> getShopData() async {
+    // Load commission
+    ProductCubit.get(context).getAppCommission();
+
+    shopModel = (await ProductCubit.get(
+      context,
+    ).getShop(sellerId: widget.order.shopId))!;
+
+    // قائمة الـ options
+    final options = shopModel.deliveryOptions ?? [];
+
+    // نحاول نلاقي الإمارة بتاعت المستخدم
+    final selectedOption = options.cast<Map<String, dynamic>?>().firstWhere(
+      (opt) => opt?['emirate'] == userEmirate,
+      orElse: () => null,
     );
 
-    total = 0;
-    payPrice[0] = widget.order.price;
-    for (int i = 0; i < payPrice.length - 2; i++) {
-      total += payPrice[i];
-    }
-    payPrice[2] = total * appCommission / 100;
-    payPrice[3] = total * 5 / 100;
-    total += payPrice[3] + payPrice[2];
+    deliveryDays = selectedOption?['days'] ?? 0;
+    deliveryPrice = selectedOption?['price'] ?? 0;
+
+    payPrice = [0, deliveryPrice, 10, 0];
   }
 
   @override
   Widget build(BuildContext context) {
-    // Load commission
-    ProductCubit.get(context).getAppCommission();
-
-    var currentProduct = widget.order.products[_currentProductIndex];
-
     List<String> paySummary = [
       S.of(context).subtotal,
       S.of(context).delivery_fees,
@@ -65,312 +111,359 @@ class _OrderDetailsState extends State<OrderDetails> {
     return BlocConsumer<ProductCubit, ProductState>(
       listener: (context, state) {
         if (state is ProductGetAppCommissionSuccessState) {
-          UserCubit.get(context).getShopInfoById(widget.order.shopId);
           appCommission = state.commission;
-          calculations();
         }
       },
       builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
-            forceMaterialTransparency: true,
-            leadingWidth: 53,
-            leading: Padding(
-              padding: EdgeInsets.fromLTRB(
-                lang == 'en' ? 7 : 0,
-                6,
-                lang == 'en' ? 0 : 7,
-                6,
-              ),
-              child: Material(
-                color: lightGreyColor.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(12.r),
-                child: InkWell(
+        List<String> paySummary = [
+          S.of(context).subtotal,
+          S.of(context).delivery_fees,
+          S.of(context).service_fees,
+          S.of(context).payment_fees,
+        ];
+        total = 0;
+        totalQuantity = widget.order.products.fold(
+          0,
+          (sum, product) => sum + product.quantity,
+        );
+        payPrice[0] = widget.order.products.fold<num>(
+          0,
+          (sum, product) => sum + product.totalPrice,
+        );
+
+        for (int i = 0; i < payPrice.length - 2; i++) {
+          total += payPrice[i];
+        }
+
+        // عمولة المتجر
+        payPrice[2] = (payPrice[0] * appCommission) / 100;
+
+        // رسوم الدفع
+        payPrice[3] = payPrice[0] * 5 / 100;
+
+        total += payPrice[2] + payPrice[3];
+        return PopScope(
+          onPopInvokedWithResult: (result, _) async {
+            if (!widget.goBack) {
+              navigateAndFinish(
+                context: context,
+                screen: const Layout(getUserData: true),
+              );
+            }
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              forceMaterialTransparency: true,
+              leadingWidth: 53,
+              leading: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  lang == 'en' ? 7 : 0,
+                  6,
+                  lang == 'en' ? 0 : 7,
+                  6,
+                ),
+                child: Material(
+                  color: lightGreyColor.withOpacity(0.4),
                   borderRadius: BorderRadius.circular(12.r),
-                  onTap: () => Navigator.pop(context),
-                  child: Center(
-                    child: Icon(backIcon(), color: textColor, size: 26),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12.r),
+                    onTap: widget.goBack
+                        ? () => Navigator.pop(context)
+                        : () => navigateAndFinish(
+                            context: context,
+                            screen: const Layout(getUserData: true),
+                          ),
+                    child: Center(
+                      child: Icon(backIcon(), color: textColor, size: 26),
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            title: Text(
-              S.of(context).order_details,
-              style: TextStyle(
-                fontSize: 21,
-                fontWeight: FontWeight.w800,
-                color: textColor,
-              ),
-            ),
-            centerTitle: true,
-          ),
-          body: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: 160,
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: widget.order.products.length,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentProductIndex = index;
-                      });
-                    },
-                    itemBuilder: (context, index) {
-                      var product = widget.order.products[index];
-                      return _buildProductCard(product, index);
-                    },
-                  ),
+              title: Text(
+                S.of(context).order_details,
+                style: TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w800,
+                  color: textColor,
                 ),
-
-                if (widget.order.products.length > 1) ...[
-                  const SizedBox(height: 8),
-                  Center(
-                    child: SmoothPageIndicator(
+              ),
+              centerTitle: true,
+            ),
+            body: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 160,
+                    child: PageView.builder(
                       controller: _pageController,
-                      count: widget.order.products.length,
-                      effect: WormEffect(
-                        dotHeight: 8,
-                        dotWidth: 8,
-                        activeDotColor: primaryColor,
-                        dotColor: Colors.grey.withOpacity(0.4),
+                      itemCount: widget.order.products.length,
+                      onPageChanged: (index) {
+                        setState(() {
+                          _currentProductIndex = index;
+                        });
+                      },
+                      itemBuilder: (context, index) {
+                        var product = widget.order.products[index];
+                        return _buildProductCard(product, index);
+                      },
+                    ),
+                  ),
+
+                  if (widget.order.products.length > 1) ...[
+                    const SizedBox(height: 8),
+                    Center(
+                      child: SmoothPageIndicator(
+                        controller: _pageController,
+                        count: widget.order.products.length,
+                        effect: WormEffect(
+                          dotHeight: 8,
+                          dotWidth: 8,
+                          activeDotColor: primaryColor,
+                          dotColor: Colors.grey.withOpacity(0.4),
+                        ),
                       ),
+                    ),
+                  ],
+
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 7, vertical: 10),
+                    child: Text(
+                      S.of(context).order_details,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+
+                  SafeArea(
+                    child: Column(
+                      spacing: 10,
+                      children: [
+                        _buildSpecificationsSection(currentProduct),
+                        Container(
+                          width: 1.sw,
+                          margin: EdgeInsets.symmetric(horizontal: 15),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    S.of(context).total_quantity,
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      color: textColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Text(
+                                    totalQuantity.toString(),
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      color: textColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    paySummary[1],
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      color: textColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Text(
+                                    formatNumberWithCommas(
+                                      payPrice[1].toDouble(),
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      color: textColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    paySummary[2],
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      color: textColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Text(
+                                    formatNumberWithCommas(
+                                      payPrice[2].toDouble(),
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      color: textColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    paySummary[3],
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      color: textColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Text(
+                                    formatNumberWithCommas(
+                                      payPrice[3].toDouble(),
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      color: textColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                child: Divider(
+                                  color: greyColor.withOpacity(0.15),
+                                  thickness: 3,
+                                ),
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    S.of(context).total_price,
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      color: textColor,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  Text(
+                                    "AED ${formatNumberWithCommas(widget.order.price.toDouble())}",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      color: textColor,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                child: Divider(
+                                  color: greyColor.withOpacity(0.15),
+                                  thickness: 3,
+                                ),
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    spacing: 5,
+                                    children: [
+                                      const Icon(
+                                        Icons.credit_score_rounded,
+                                        color: textColor,
+                                      ),
+                                      Text(
+                                        S.of(context).payment_method,
+                                        style: TextStyle(
+                                          fontSize: 17,
+                                          color: textColor,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.paypal,
+                                        color: primaryColor,
+                                        size: 26,
+                                      ),
+                                      Text(
+                                        S.of(context).paypal,
+                                        style: TextStyle(
+                                          color: primaryColor,
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 10),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.timelapse_rounded,
+                                        color: textColor,
+                                      ),
+                                      SizedBox(width: 5),
+                                      Text(
+                                        S.of(context).delivery_days,
+                                        style: TextStyle(
+                                          fontSize: 17,
+                                          color: textColor,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    "${widget.order.deliveryTime} ${S.of(context).days}",
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      color: primaryColor,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 20),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 7, vertical: 10),
-                  child: Text(
-                    S.of(context).orders_specifications,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: textColor,
-                    ),
-                  ),
-                ),
-
-                SafeArea(
-                  child: Column(
-                    spacing: 10,
-                    children: [
-                      _buildSpecificationsSection(currentProduct),
-                      Container(
-                        width: 1.sw,
-                        margin: EdgeInsets.symmetric(horizontal: 15),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  S.of(context).total_quantity,
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color: textColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Text(
-                                  totalQuantity.toString(),
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color: textColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 6),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  paySummary[1],
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color: textColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Text(
-                                  formatNumberWithCommas(
-                                    payPrice[1].toDouble(),
-                                  ),
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color: textColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 6),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  paySummary[2],
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color: textColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Text(
-                                  formatNumberWithCommas(
-                                    payPrice[2].toDouble(),
-                                  ),
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color: textColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 6),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  paySummary[3],
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color: textColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Text(
-                                  formatNumberWithCommas(
-                                    payPrice[3].toDouble(),
-                                  ),
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color: textColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 10),
-                              child: Divider(
-                                color: greyColor.withOpacity(0.15),
-                                thickness: 3,
-                              ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  S.of(context).total,
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: textColor,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                Text(
-                                  "AED ${formatNumberWithCommas(total.toDouble())}",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: textColor,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 10),
-                              child: Divider(
-                                color: greyColor.withOpacity(0.15),
-                                thickness: 3,
-                              ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  spacing: 5,
-                                  children: [
-                                    const Icon(
-                                      Icons.credit_score_rounded,
-                                      color: textColor,
-                                    ),
-                                    Text(
-                                      S.of(context).payment_method,
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        color: textColor,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.paypal,
-                                      color: primaryColor,
-                                      size: 26,
-                                    ),
-                                    Text(
-                                      S.of(context).paypal,
-                                      style: TextStyle(
-                                        color: primaryColor,
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.timelapse_rounded,
-                                      color: textColor,
-                                    ),
-                                    SizedBox(width: 5),
-                                    Text(
-                                      S.of(context).delivery_days,
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        color: textColor,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  "${widget.order.deliveryTime} ${S.of(context).days}",
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color: primaryColor,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 20),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         );
@@ -382,8 +475,16 @@ class _OrderDetailsState extends State<OrderDetails> {
     // Your existing product card widget logic here
     return Padding(
       padding: EdgeInsets.only(
-        left: lang == 'en' ? 7 : 0,
-        right: lang == 'ar' ? 7 : 0,
+        left: lang == 'en'
+            ? index == 0
+                  ? 7
+                  : 0
+            : 7,
+        right: lang == 'ar'
+            ? index == 0
+                  ? 7
+                  : 0
+            : 7,
         bottom: 5,
         top: 5,
       ),
@@ -433,7 +534,10 @@ class _OrderDetailsState extends State<OrderDetails> {
                 Expanded(
                   flex: 4,
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 15, left: 5),
+                    padding: EdgeInsets.only(
+                      left: lang == 'en' ? 5 : 15,
+                      right: lang == 'ar' ? 5 : 15,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,7 +548,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.w900,
                               color: textColor,
                             ),
@@ -452,7 +556,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                         ),
                         SizedBox(height: 3),
                         Text(
-                          'Ordered ${DateFormat.yMMMd().format(widget.order.createdAt.toDate())}',
+                          '${S.current.ordered}: ${DateFormat.yMMMd().format(widget.order.createdAt.toDate())}',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
@@ -465,7 +569,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                           children: [
                             Material(
                               color: getStatusBackgroundColor(
-                                widget.orderStatus ?? widget.order.orderStatus,
+                                widget.order.orderStatus,
                               ),
                               borderRadius: BorderRadius.circular(6.r),
                               child: Padding(
@@ -478,21 +582,21 @@ class _OrderDetailsState extends State<OrderDetails> {
                                     Icon(
                                       IconlyLight.document,
                                       color: getStatusTextColor(
-                                        widget.orderStatus ??
-                                            widget.order.orderStatus,
+                                        widget.order.orderStatus,
                                       ),
                                       size: 20,
                                     ),
                                     SizedBox(width: 3),
                                     Text(
-                                      widget.orderStatus?.name ??
-                                          widget.order.orderStatus.name,
+                                      getTranslatedOrderStatus(
+                                        context,
+                                        widget.order.orderStatus,
+                                      ),
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
                                         color: getStatusTextColor(
-                                          widget.orderStatus ??
-                                              widget.order.orderStatus,
+                                          widget.order.orderStatus,
                                         ),
                                       ),
                                     ),
@@ -515,7 +619,8 @@ class _OrderDetailsState extends State<OrderDetails> {
                         ),
                         SizedBox(height: 15),
                         Text(
-                          "Order id: #${widget.order.id}",
+                          "ID: #${widget.order.id}",
+                          textDirection: direction.TextDirection.ltr,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 15,
@@ -559,15 +664,19 @@ class _OrderDetailsState extends State<OrderDetails> {
             ),
             SizedBox(height: 5),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(IconlyBold.location, color: primaryColor, size: 18),
                 SizedBox(width: 5),
-                Text(
-                  widget.order.buyerAddress,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: primaryColor,
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Text(
+                    widget.order.buyerAddress,
+                    maxLines: 2,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: primaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -630,7 +739,6 @@ class _OrderDetailsState extends State<OrderDetails> {
               "AED ${formatNumberWithCommas(product.totalPrice.toDouble())}",
             ),
             _buildPriceRow(S.of(context).quantity, "${product.quantity}"),
-            // ... the rest stays the same ...
           ],
         ),
       ),

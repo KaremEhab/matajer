@@ -1,6 +1,7 @@
 // layout.dart
 
 import 'dart:developer';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:conditional_builder_null_safety/conditional_builder_null_safety.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -63,6 +64,7 @@ class LayoutState extends State<Layout> with WidgetsBindingObserver {
     if (widget.getUserData) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await UserCubit.get(context).getUserData();
+        // log("--------- USER DATA ${currentUserModel.toString()} -----------");
         if (isSeller) await UserCubit.get(context).getShop();
         if (!isSeller) {
           FavoritesCubit.get(

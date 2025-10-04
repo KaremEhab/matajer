@@ -19,6 +19,7 @@ import 'package:matajer/cubit/favorites/favorites_cubit.dart';
 import 'package:matajer/cubit/favorites/favorites_state.dart';
 import 'package:matajer/cubit/user/user_cubit.dart';
 import 'package:matajer/generated/l10n.dart';
+import 'package:matajer/models/comments_model.dart';
 import 'package:matajer/models/shop_model.dart';
 import 'package:matajer/models/user_model.dart';
 import 'package:matajer/screens/favourites/fav_shops.dart';
@@ -52,9 +53,20 @@ class _ShopAppBarState extends State<ShopAppBar> {
   bool? _isFavoritedLocal;
   bool display = false;
 
+  final userEmirate = currentUserModel.emirate;
+  late Map<String, dynamic> option;
+  late num deliveryDays;
+
   @override
   void initState() {
     super.initState();
+
+    option = widget.shopModel.deliveryOptions
+        .cast<Map<String, dynamic>>()
+        .firstWhere((opt) => opt['emirate'] == userEmirate);
+
+    deliveryDays = option['days'] ?? 0;
+
     final favCubit = FavoritesCubit.get(context);
     final shopId = widget.shopModel.shopId;
     _isFavoritedLocal =
@@ -72,7 +84,9 @@ class _ShopAppBarState extends State<ShopAppBar> {
           automaticallyImplyLeading: false,
           forceMaterialTransparency: true,
           titleSpacing: 0,
-          expandedHeight: CommentsCubit.get(context).comments.isNotEmpty ? 0.47.sh : 0.47.sh - 140.h,
+          expandedHeight: CommentsCubit.get(context).comments.isNotEmpty
+              ? 0.47.sh
+              : 0.47.sh - 140.h,
           systemOverlayStyle: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
             statusBarBrightness: shopScrollOffset >= 430.h
@@ -109,7 +123,7 @@ class _ShopAppBarState extends State<ShopAppBar> {
                       right: 0,
                       bottom: 0,
                       child: Container(
-                        height: 80,
+                        height: 100.h,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
@@ -126,7 +140,7 @@ class _ShopAppBarState extends State<ShopAppBar> {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
-                        height: shopScrollOffset >= 430.h ? 37.h : 0,
+                        height: shopScrollOffset >= 430.h ? 70 : 0,
                         color: Colors.white,
                       ),
                     ),
@@ -311,17 +325,17 @@ class _ShopAppBarState extends State<ShopAppBar> {
                                       runSpacing: 8,
                                       alignment: WrapAlignment.start,
                                       children: [
-                                        _buildTag(
+                                        buildTag(
                                           Icons.verified_outlined,
                                           S.of(context).good_quality,
                                         ),
-                                        _buildTag(
+                                        buildTag(
                                           Icons.access_time,
-                                          '${S.of(context).avg_time}: ${widget.shopModel.avgResponseTime} ${S.of(context).minutes}',
+                                          '${S.of(context).avg_time}: ${widget.shopModel.formattedAvgResponseTime}',
                                         ),
-                                        _buildTag(
+                                        buildTag(
                                           Icons.local_shipping_outlined,
-                                          '${widget.shopModel.deliveryDays} ${S.of(context).days}',
+                                          '${deliveryDays} ${S.of(context).days}',
                                         ),
                                       ],
                                     ),
@@ -341,259 +355,98 @@ class _ShopAppBarState extends State<ShopAppBar> {
                           }
                         },
                         builder: (context, state) {
-                          if (CommentsCubit.get(context).comments.isNotEmpty) {
+                          // 🔹 Case 1: Loading → show shimmer placeholders
+                          if (state is CommentsLoadingState) {
                             return Center(
                               child: SizedBox(
                                 height: 130.h,
-                                child: ListView.builder(
+                                child: ListView.separated(
                                   scrollDirection: Axis.horizontal,
-                                  itemCount: CommentsCubit.get(
-                                    context,
-                                  ).comments.length,
+                                  itemCount: 3,
+                                  separatorBuilder: (_, __) =>
+                                      SizedBox(width: 10.w),
                                   itemBuilder: (context, index) {
-                                    final comment = CommentsCubit.get(
-                                      context,
-                                    ).comments[index];
-
-                                    if (state is CommentsLoadingState) {
-                                      return Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Center(
-                                            child: shopAppBarCommentShimmer(
-                                              shopScrollOffset,
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    }
-
-                                    return ConditionalBuilder(
-                                      condition: display,
-                                      builder: (context) {
-                                        return FutureBuilder<UserModel>(
-                                          future: UserCubit.get(
-                                            context,
-                                          ).getUserInfoById(comment.userId),
-                                          builder: (context, snapshot) {
-                                            if (!snapshot.hasData) {
-                                              return Center(
-                                                child: shopAppBarCommentShimmer(
-                                                  shopScrollOffset,
-                                                ),
-                                              );
-                                            }
-
-                                            final user = snapshot.data!;
-
-                                            return RepaintBoundary(
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(15),
-                                                child: AnimatedAlign(
-                                                  duration: const Duration(
-                                                    milliseconds: 600,
-                                                  ),
-                                                  curve: Curves.easeInOut,
-                                                  alignment:
-                                                      Alignment.topCenter,
-                                                  heightFactor:
-                                                      shopScrollOffset >= 150.h
-                                                      ? 0
-                                                      : 1,
-                                                  widthFactor:
-                                                      shopScrollOffset >= 150.h
-                                                      ? 0
-                                                      : 1,
-                                                  child: AnimatedSize(
-                                                    duration: const Duration(
-                                                      milliseconds: 600,
-                                                    ),
-                                                    curve: Curves.easeInOut,
-                                                    child: Center(
-                                                      child: Padding(
-                                                        padding:
-                                                            EdgeInsets.only(
-                                                              left: index == 0
-                                                                  ? 7.h
-                                                                  : 0,
-                                                              right: 10.h,
-                                                              top: 10.h,
-                                                            ),
-                                                        child: Material(
-                                                          color: scaffoldColor,
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                15,
-                                                              ),
-                                                          child: InkWell(
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  15,
-                                                                ),
-                                                            onTap: () {
-                                                              navigateTo(
-                                                                context:
-                                                                    context,
-                                                                screen: ShopComments(
-                                                                  shopModel: widget
-                                                                      .shopModel,
-                                                                ),
-                                                              );
-                                                            },
-                                                            child: Container(
-                                                              padding:
-                                                                  EdgeInsets.all(
-                                                                    10.h,
-                                                                  ),
-                                                              width:
-                                                                  CommentsCubit.get(
-                                                                        context,
-                                                                      ).comments.length ==
-                                                                      1
-                                                                  ? 0.96.sw
-                                                                  : 300.w,
-                                                              height: 0.32.sh,
-                                                              clipBehavior:
-                                                                  Clip.none,
-                                                              decoration: BoxDecoration(
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                      15,
-                                                                    ),
-                                                                border: Border.all(
-                                                                  color: textColor
-                                                                      .withOpacity(
-                                                                        0.1,
-                                                                      ),
-                                                                ),
-                                                              ),
-                                                              child: Column(
-                                                                spacing: 5,
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .start,
-                                                                children: [
-                                                                  Row(
-                                                                    spacing: 5,
-                                                                    children: [
-                                                                      Container(
-                                                                        padding:
-                                                                            EdgeInsets.all(
-                                                                              4,
-                                                                            ),
-                                                                        decoration: BoxDecoration(
-                                                                          color: Color(
-                                                                            0xFFD7E0FF,
-                                                                          ),
-                                                                          shape:
-                                                                              BoxShape.circle,
-                                                                        ),
-                                                                        child: Container(
-                                                                          padding:
-                                                                              EdgeInsets.all(
-                                                                                3,
-                                                                              ),
-                                                                          decoration: BoxDecoration(
-                                                                            color:
-                                                                                primaryColor,
-                                                                            shape:
-                                                                                BoxShape.circle,
-                                                                          ),
-                                                                          child: CircleAvatar(
-                                                                            radius:
-                                                                                23.h,
-                                                                            backgroundImage: NetworkImage(
-                                                                              user.profilePicture.toString(),
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      Expanded(
-                                                                        flex: 2,
-                                                                        child: Column(
-                                                                          crossAxisAlignment:
-                                                                              CrossAxisAlignment.start,
-                                                                          children: [
-                                                                            Text(
-                                                                              user.username,
-                                                                              overflow: TextOverflow.ellipsis,
-                                                                              maxLines: 1,
-                                                                              style: TextStyle(
-                                                                                fontWeight: FontWeight.w900,
-                                                                                fontSize: 16.sp,
-                                                                              ),
-                                                                            ),
-                                                                            Text(
-                                                                              user.emirate,
-                                                                              overflow: TextOverflow.ellipsis,
-                                                                              maxLines: 1,
-                                                                              style: TextStyle(
-                                                                                fontWeight: FontWeight.w600,
-                                                                              ),
-                                                                            ),
-                                                                          ],
-                                                                        ),
-                                                                      ),
-                                                                      Expanded(
-                                                                        child: Row(
-                                                                          mainAxisAlignment:
-                                                                              MainAxisAlignment.end,
-                                                                          children: [
-                                                                            Text(
-                                                                              comment.rating.toString(),
-                                                                            ),
-                                                                            Icon(
-                                                                              Icons.star_rounded,
-                                                                              color: CupertinoColors.systemYellow,
-                                                                            ),
-                                                                          ],
-                                                                        ),
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                  Flexible(
-                                                                    child: Text(
-                                                                      comment
-                                                                          .comment,
-                                                                      overflow:
-                                                                          TextOverflow
-                                                                              .ellipsis,
-                                                                      style: TextStyle(
-                                                                        fontSize:
-                                                                            16.sp,
-                                                                        fontWeight:
-                                                                            FontWeight.w500,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        );
-                                      },
-                                      fallback: (v) => Center(
-                                        child: shopAppBarCommentShimmer(
-                                          shopScrollOffset,
-                                        ),
-                                      ),
+                                    return shopAppBarCommentShimmer(
+                                      shopScrollOffset,
                                     );
                                   },
                                 ),
                               ),
                             );
                           }
-                          return SizedBox.shrink();
+
+                          // 🔹 Case 2: Success → show comments
+                          if (state is CommentsSuccessState &&
+                              CommentsCubit.get(context).comments.isNotEmpty) {
+                            final comments = CommentsCubit.get(
+                              context,
+                            ).comments;
+
+                            return Center(
+                              child: SizedBox(
+                                height: 130.h,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: comments.length,
+                                  itemBuilder: (context, index) {
+                                    final comment = comments[index];
+
+                                    return FutureBuilder<UserModel>(
+                                      future: UserCubit.get(
+                                        context,
+                                      ).getUserInfoById(comment.userId),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return SizedBox(
+                                            width: 100.w,
+                                            child: const Center(
+                                              child:
+                                                  CupertinoActivityIndicator(),
+                                            ),
+                                          );
+                                        }
+
+                                        if (!snapshot.hasData) {
+                                          debugPrint(
+                                            "⚠️ No user found for userId: ${comment.userId}",
+                                          );
+                                          return SizedBox(
+                                            width: 100.w,
+                                            child: const Center(
+                                              child: Icon(
+                                                Icons.error,
+                                                color: Colors.red,
+                                              ),
+                                            ),
+                                          );
+                                        }
+
+                                        final user = snapshot.data!;
+
+                                        // 🔹 Log the user info
+                                        debugPrint(
+                                          "Fetched User Info => ${user.toMap()}",
+                                        );
+
+                                        return _buildCommentCard(
+                                          user,
+                                          comment,
+                                          index,
+                                          shopScrollOffset,
+                                          widget.shopModel,
+                                          context,
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                            );
+                          }
+
+                          // 🔹 Case 3: No comments → return nothing
+                          return const SizedBox.shrink();
                         },
                       ),
                     ],
@@ -907,20 +760,6 @@ class _ShopAppBarState extends State<ShopAppBar> {
       },
     );
   }
-
-  Widget _buildTag(IconData icon, String text) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: primaryColor, size: 18),
-        SizedBox(width: 4),
-        Text(
-          text,
-          style: TextStyle(color: primaryColor, fontWeight: FontWeight.w800),
-        ),
-      ],
-    );
-  }
 }
 
 Widget shopAppBarCommentShimmer(double shopScrollOffset) {
@@ -1012,6 +851,143 @@ Widget shopAppBarCommentShimmer(double shopScrollOffset) {
                     radius: 6,
                   ),
                 ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Widget _buildCommentCard(
+  UserModel user,
+  CommentsModel comment,
+  int index,
+  double shopScrollOffset,
+  ShopModel shopModel,
+  BuildContext context,
+) {
+  return RepaintBoundary(
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(15),
+      child: AnimatedAlign(
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+        alignment: Alignment.topCenter,
+        heightFactor: shopScrollOffset >= 150.h ? 0 : 1,
+        widthFactor: shopScrollOffset >= 150.h ? 0 : 1,
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: index == 0 ? 7.h : 0,
+                right: 10.h,
+                top: 10.h,
+              ),
+              child: Material(
+                color: scaffoldColor,
+                borderRadius: BorderRadius.circular(15),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(15),
+                  onTap: () {
+                    navigateTo(
+                      context: context,
+                      screen: ShopComments(shopModel: shopModel),
+                    );
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(10.h),
+                    width: CommentsCubit.get(context).comments.length == 1
+                        ? 0.96.sw
+                        : 300.w,
+                    height: 0.32.sh,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: textColor.withOpacity(0.1)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFD7E0FF),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: const BoxDecoration(
+                                  color: primaryColor,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: CircleAvatar(
+                                  radius: 23.h,
+                                  backgroundImage: NetworkImage(
+                                    user.profilePicture!,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 5.w),
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user.username,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 16.sp,
+                                    ),
+                                  ),
+                                  Text(
+                                    user.emirate,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(comment.rating.toString()),
+                                  const Icon(
+                                    Icons.star_rounded,
+                                    color: CupertinoColors.systemYellow,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        Flexible(
+                          child: Text(
+                            comment.comment,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

@@ -20,6 +20,23 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'en';
 
+  static String m0(count) => "${Intl.plural(count, one: 'day', other: 'days')}";
+
+  static String m1(count) =>
+      "${Intl.plural(count, one: 'hour', other: 'hours')}";
+
+  static String m2(count) =>
+      "${Intl.plural(count, one: 'minute', other: 'minutes')}";
+
+  static String m3(count) =>
+      "${Intl.plural(count, one: 'month', other: 'months')}";
+
+  static String m4(count) =>
+      "${Intl.plural(count, one: 'second', other: 'seconds')}";
+
+  static String m5(count) =>
+      "${Intl.plural(count, one: 'week', other: 'weeks')}";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "Shipping_fees": MessageLookupByLibrary.simpleMessage("Shipping fees"),
@@ -300,6 +317,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "data_usage_desc": MessageLookupByLibrary.simpleMessage(
       "Your data is used to process orders, improve our services, provide customer support, and notify you of updates related to your orders or account.",
     ),
+    "day": m0,
     "days": MessageLookupByLibrary.simpleMessage("days"),
     "decline": MessageLookupByLibrary.simpleMessage("DECLINE"),
     "delayed_order_issues": MessageLookupByLibrary.simpleMessage(
@@ -376,6 +394,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "english": MessageLookupByLibrary.simpleMessage("EN"),
     "enter_address": MessageLookupByLibrary.simpleMessage(
       "Enter your new address",
+    ),
+    "enter_address_name": MessageLookupByLibrary.simpleMessage(
+      "Enter address name",
     ),
     "enter_password": MessageLookupByLibrary.simpleMessage(
       "Please enter your password",
@@ -455,6 +476,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "My Old Password is...",
     ),
     "history": MessageLookupByLibrary.simpleMessage("History"),
+    "hour": m1,
     "hours": MessageLookupByLibrary.simpleMessage("hours"),
     "image": MessageLookupByLibrary.simpleMessage("Image"),
     "image_validation": MessageLookupByLibrary.simpleMessage(
@@ -509,6 +531,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Loading delivery time...",
     ),
     "location": MessageLookupByLibrary.simpleMessage("Location"),
+    "location_already_saved": MessageLookupByLibrary.simpleMessage(
+      "Location already saved",
+    ),
     "logo": MessageLookupByLibrary.simpleMessage("Logo"),
     "logout": MessageLookupByLibrary.simpleMessage("Logout"),
     "lorem_description": MessageLookupByLibrary.simpleMessage(
@@ -537,7 +562,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "messages_tip": MessageLookupByLibrary.simpleMessage(
       "Receive alerts when you get notified by a new message from a customer or admin",
     ),
+    "minute": m2,
     "minutes": MessageLookupByLibrary.simpleMessage("min"),
+    "month": m3,
     "monthly": MessageLookupByLibrary.simpleMessage("Monthly"),
     "months": MessageLookupByLibrary.simpleMessage("months"),
     "multi_payment_issues": MessageLookupByLibrary.simpleMessage(
@@ -574,6 +601,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "no_banner": MessageLookupByLibrary.simpleMessage("No Banner"),
     "no_chats": MessageLookupByLibrary.simpleMessage("No chats yet"),
     "no_drafts_found": MessageLookupByLibrary.simpleMessage("No drafts found"),
+    "no_fav_products": MessageLookupByLibrary.simpleMessage(
+      "No favorite products",
+    ),
+    "no_fav_shops": MessageLookupByLibrary.simpleMessage("No favorite shops"),
     "no_internet_connection": MessageLookupByLibrary.simpleMessage(
       "No internet connection",
     ),
@@ -888,6 +919,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "searching_for_topic": MessageLookupByLibrary.simpleMessage(
       "Searching for certain topic?",
     ),
+    "second": m4,
     "secure_payments": MessageLookupByLibrary.simpleMessage("Secure Payments"),
     "security_measures": MessageLookupByLibrary.simpleMessage(
       "Security Measures",
@@ -902,6 +934,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "select": MessageLookupByLibrary.simpleMessage("Select"),
     "select_emirate": MessageLookupByLibrary.simpleMessage("Select Emirate"),
     "select_gender": MessageLookupByLibrary.simpleMessage("Select your gender"),
+    "select_this_location": MessageLookupByLibrary.simpleMessage(
+      "Select this location",
+    ),
     "selected_products": MessageLookupByLibrary.simpleMessage(
       "selected product(s)?",
     ),
@@ -1095,6 +1130,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Do you want to save your progress as a draft?",
     ),
     "warning": MessageLookupByLibrary.simpleMessage("Warning"),
+    "week": m5,
     "weekly": MessageLookupByLibrary.simpleMessage("Weekly"),
     "weeks": MessageLookupByLibrary.simpleMessage("weeks"),
     "welcome_create_account": MessageLookupByLibrary.simpleMessage(

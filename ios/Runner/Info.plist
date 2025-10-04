@@ -10,17 +10,7 @@
 	<string>Matajer</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
-	<key>FacebookAppID</key>
-    <string>957782142162304</string>
-    <key>FacebookDisplayName</key>
-    <string>Matajer</string>
-    <key>FacebookAdvertiserIDCollectionEnabled</key>
-    <true/>
-    <key>aps-environment</key>
-    <string>production</string>
 	<key>CFBundleIcons</key>
-	<key>FirebaseAppDelegateProxyEnabled</key>
-    <false/>
 	<dict>
 		<key>CFBundlePrimaryIcon</key>
 		<dict>
@@ -84,24 +74,42 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>FacebookAdvertiserIDCollectionEnabled</key>
+	<true/>
+	<key>FacebookAppID</key>
+	<string>957782142162304</string>
 	<key>FacebookClientToken</key>
 	<string>b60efcef2604c8cf3f49bffeaeafe335</string>
+	<key>FacebookDisplayName</key>
+	<string>Matajer</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need to access library to upload images</string>
 	<key>NSCameraUsageDescription</key>
-	<string>We need to access camera to take photos</string>
+    <string>We need to access camera to take photos</string>
+
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>We need to access your photo library to select and upload images</string>
+
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>We need to save photos taken with the camera to your library</string>
+
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We need your location in the background to update services even when the app is not open.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>We need access to your location at all times to provide accurate background updates.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location while using the app to provide nearby shops and services.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>We need to access microphone to record videos</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need to access library to upload images</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-
 	<key>UIBackgroundModes</key>
-    <array>
-      <string>location</string>
-    </array>
 	<array>
+		<string>location</string>
 		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
@@ -122,5 +130,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>aps-environment</key>
+	<string>production</string>
 </dict>
 </plist>

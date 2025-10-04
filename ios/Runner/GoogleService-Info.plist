@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>63640744288-goi9svb23cmjosg9lq5jda6qgtvk6r7s.apps.googleusercontent.com</string>
+	<string>63640744288-6o30m2f987jf870cjnjtsagrtjkn57qe.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.63640744288-goi9svb23cmjosg9lq5jda6qgtvk6r7s</string>
+	<string>com.googleusercontent.apps.63640744288-6o30m2f987jf870cjnjtsagrtjkn57qe</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>63640744288-03mlijj18niva34fuundb1684jvkoh7h.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.matajer.matajer</string>
+	<string>com.matajir.matajir</string>
 	<key>PROJECT_ID</key>
 	<string>matajr-40a00</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:63640744288:ios:348699a85084d1a683ae05</string>
+	<string>1:63640744288:ios:38b5d29452ddb0d383ae05</string>
 </dict>
 </plist>

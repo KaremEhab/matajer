@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:matajer/constants/colors.dart';
 import 'package:matajer/cubit/analytics/analytics_cubit.dart';
 import 'package:matajer/cubit/chat/chat_cubit.dart';
 import 'package:matajer/cubit/favorites/favorites_cubit.dart';
 import 'package:matajer/cubit/notifications/notification_cubit.dart';
 import 'package:matajer/cubit/wallet/wallet_cubit.dart';
+import 'package:matajer/generated/l10n.dart';
 import 'package:matajer/models/shop_model.dart';
 import 'package:matajer/models/user_model.dart';
 import 'package:matajer/cubit/register/register_cubit.dart';
@@ -77,7 +79,45 @@ ShopModel? currentShopModel;
 const String shopSearchHistoryKey = 'shopSearchHistory';
 const String productSearchHistoryKey = 'productSearchHistory';
 
-enum NotificationTypes { chat, offer, newProduct, comment, review, newOrder, orderStatus}
+enum NotificationTypes {
+  chat,
+  offer,
+  newProduct,
+  comment,
+  review,
+  newOrder,
+  orderStatus,
+}
+
+// Define variables at the top of your State class
+final Map<String, String> emiratesMap = {
+  S.current.abu_dhabi: "abu dhabi",
+  S.current.dubai: "dubai",
+  S.current.sharjah: "sharjah",
+  S.current.ajman: "ajman",
+  S.current.umm_al_quwain: "umm al-quwain",
+  S.current.ras_al_khaimah: "ras al khaimah",
+  S.current.fujairah: "fujairah",
+  S.current.gharbya: "gharbya",
+  S.current.al_ain: "al-ain",
+};
+
+Widget buildTag(IconData icon, String text) {
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 18, color: textColor.withOpacity(0.6)),
+      SizedBox(width: 4),
+      Text(
+        text,
+        style: TextStyle(
+          fontWeight: FontWeight.w500,
+          color: textColor.withOpacity(0.6),
+        ),
+      ),
+    ],
+  );
+}
 
 List<String> categoriesText = [
   'Matajir',

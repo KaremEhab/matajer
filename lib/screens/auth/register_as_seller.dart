@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,6 +14,7 @@ import 'package:matajer/constants/vars.dart';
 import 'package:matajer/cubit/user/user_cubit.dart';
 import 'package:matajer/cubit/user/user_state.dart';
 import 'package:matajer/generated/l10n.dart';
+import 'package:matajer/models/shop_model.dart';
 import 'package:matajer/screens/layout.dart';
 import 'package:matajer/widgets/custom_form_field.dart';
 import 'package:matajer/widgets/pick_image_source.dart';
@@ -28,6 +30,8 @@ class RegisterAsSeller extends StatefulWidget {
 }
 
 class _RegisterAsSellerState extends State<RegisterAsSeller> {
+  List<Map<String, dynamic>> deliveryOptions = []; // ✅ المتغير هنا
+
   XFile? selectedShopProfilePic;
   XFile? selectedShopCoverPic;
   XFile? licenceImage;
@@ -41,8 +45,6 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
   final TextEditingController shopDescController = TextEditingController();
   final TextEditingController licenceController = TextEditingController();
   final TextEditingController deliveryDaysController = TextEditingController();
-  final TextEditingController avgResponseTimeController =
-      TextEditingController();
 
   final ScrollController scrollController = ScrollController();
   final PageController pageController = PageController();
@@ -73,7 +75,9 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
       'name': prefs.getString('cached_shop_name') ?? '',
       'type': prefs.getString('cached_shop_type') ?? '',
       'desc': prefs.getString('cached_shop_desc') ?? '',
-      'delivery_days': prefs.getString('cached_shop_delivery_days') ?? '',
+      // ✅ عند التحميل
+      'delivery_options':
+          prefs.getString('cached_shop_delivery_options') ?? '[]',
       'response_time': prefs.getString('cached_shop_response_time') ?? '',
       'licence': prefs.getString('cached_shop_licence') ?? '',
       'logo': prefs.getString('cached_logo_path'),
@@ -84,9 +88,17 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
     shopNameController.text = _cachedData['name'];
     shopTypeController.text = _cachedData['type'];
     shopDescController.text = _cachedData['desc'];
-    deliveryDaysController.text = _cachedData['delivery_days'];
-    avgResponseTimeController.text = _cachedData['response_time'];
     licenceController.text = _cachedData['licence'];
+
+    // ✅ decode deliveryOptions من JSON
+    try {
+      deliveryOptions = List<Map<String, dynamic>>.from(
+        jsonDecode(_cachedData['delivery_options']),
+      );
+    } catch (_) {
+      deliveryOptions = [];
+    }
+
     if (_cachedData['logo'] != null) {
       selectedShopProfilePic = XFile(_cachedData['logo']);
     }
@@ -103,15 +115,14 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
     await prefs.setString('cached_shop_name', shopNameController.text);
     await prefs.setString('cached_shop_type', shopTypeController.text);
     await prefs.setString('cached_shop_desc', shopDescController.text);
-    await prefs.setString(
-      'cached_shop_delivery_days',
-      deliveryDaysController.text,
-    );
-    await prefs.setString(
-      'cached_shop_response_time',
-      avgResponseTimeController.text,
-    );
     await prefs.setString('cached_shop_licence', licenceController.text);
+
+    // ✅ عند التخزين
+    await prefs.setString(
+      'cached_shop_delivery_options',
+      jsonEncode(deliveryOptions),
+    );
+
     if (selectedShopProfilePic != null) {
       await prefs.setString('cached_logo_path', selectedShopProfilePic!.path);
     }
@@ -128,7 +139,7 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
     await prefs.remove('cached_shop_name');
     await prefs.remove('cached_shop_type');
     await prefs.remove('cached_shop_desc');
-    await prefs.remove('cached_shop_delivery_days');
+    await prefs.remove('cached_shop_delivery_options'); // ✅ مسح options
     await prefs.remove('cached_shop_response_time');
     await prefs.remove('cached_shop_licence');
     await prefs.remove('cached_logo_path');
@@ -141,7 +152,6 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
         shopTypeController.text.trim().isNotEmpty ||
         shopDescController.text.trim().isNotEmpty ||
         deliveryDaysController.text.trim().isNotEmpty ||
-        avgResponseTimeController.text.trim().isNotEmpty ||
         licenceController.text.trim().isNotEmpty ||
         selectedShopProfilePic != null ||
         selectedShopCoverPic != null ||
@@ -153,7 +163,6 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
         shopTypeController.text != _cachedData['type'] ||
         shopDescController.text != _cachedData['desc'] ||
         deliveryDaysController.text != _cachedData['delivery_days'] ||
-        avgResponseTimeController.text != _cachedData['response_time'] ||
         licenceController.text != _cachedData['licence'] ||
         (selectedShopProfilePic?.path != _cachedData['logo']) ||
         (selectedShopCoverPic?.path != _cachedData['banner']) ||
@@ -173,33 +182,32 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
 
     return await showDialog(
           context: context,
-          builder:
-              (ctx) => AlertDialog(
-                title: Text("${S.of(context).save_draft}?"),
-                content: Text(S.of(context).want_to_save_progress),
-                actions: [
-                  TextButton(
-                    child: Text(
-                      isChanged ? S.of(context).discard : S.of(context).clear,
-                    ),
-                    onPressed: () async {
-                      if (isChanged) {
-                        Navigator.of(ctx).pop(true);
-                      } else {
-                        await _clearCache();
-                        Navigator.of(ctx).pop(true);
-                      }
-                    },
-                  ),
-                  TextButton(
-                    child: Text(S.of(context).yes),
-                    onPressed: () async {
-                      await _saveCache();
-                      if (context.mounted) Navigator.of(ctx).pop(true);
-                    },
-                  ),
-                ],
+          builder: (ctx) => AlertDialog(
+            title: Text("${S.of(context).save_draft}?"),
+            content: Text(S.of(context).want_to_save_progress),
+            actions: [
+              TextButton(
+                child: Text(
+                  isChanged ? S.of(context).discard : S.of(context).clear,
+                ),
+                onPressed: () async {
+                  if (isChanged) {
+                    Navigator.of(ctx).pop(true);
+                  } else {
+                    await _clearCache();
+                    Navigator.of(ctx).pop(true);
+                  }
+                },
               ),
+              TextButton(
+                child: Text(S.of(context).yes),
+                onPressed: () async {
+                  await _saveCache();
+                  if (context.mounted) Navigator.of(ctx).pop(true);
+                },
+              ),
+            ],
+          ),
         ) ??
         false;
   }
@@ -314,12 +322,11 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                             width: 24.w,
                             height: 4.h,
                             child: Material(
-                              color:
-                                  (selectedPage == 1 || selectedPage == 2)
-                                      ? CupertinoColors.activeGreen
-                                      : CupertinoColors.activeGreen.withOpacity(
-                                        0.4,
-                                      ),
+                              color: (selectedPage == 1 || selectedPage == 2)
+                                  ? CupertinoColors.activeGreen
+                                  : CupertinoColors.activeGreen.withOpacity(
+                                      0.4,
+                                    ),
                               borderRadius: BorderRadius.circular(100),
                             ),
                           ),
@@ -328,12 +335,11 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                             width: 24.w,
                             height: 4.h,
                             child: Material(
-                              color:
-                                  selectedPage == 2
-                                      ? CupertinoColors.activeGreen
-                                      : CupertinoColors.activeGreen.withOpacity(
-                                        0.4,
-                                      ),
+                              color: selectedPage == 2
+                                  ? CupertinoColors.activeGreen
+                                  : CupertinoColors.activeGreen.withOpacity(
+                                      0.4,
+                                    ),
                               borderRadius: BorderRadius.circular(100),
                             ),
                           ),
@@ -410,12 +416,11 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                                     title: S.of(context).shop_type,
                                     hint: S.of(context).shop_type_hint,
                                     outlineInputBorder: OutlineInputBorder(
-                                      borderRadius:
-                                          expanded
-                                              ? BorderRadius.circular(15.r)
-                                              : BorderRadius.vertical(
-                                                top: Radius.circular(15.r),
-                                              ),
+                                      borderRadius: expanded
+                                          ? BorderRadius.circular(15.r)
+                                          : BorderRadius.vertical(
+                                              top: Radius.circular(15.r),
+                                            ),
                                       borderSide: const BorderSide(
                                         width: 5,
                                         color: transparentColor,
@@ -507,20 +512,20 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                                                             Container(
                                                               padding:
                                                                   selectedCategory ==
-                                                                          index
-                                                                      ? EdgeInsets.all(
-                                                                        13,
-                                                                      )
-                                                                      : null,
+                                                                      index
+                                                                  ? EdgeInsets.all(
+                                                                      13,
+                                                                    )
+                                                                  : null,
                                                               decoration: BoxDecoration(
                                                                 color:
                                                                     selectedCategory ==
-                                                                            index
-                                                                        ? primaryColor
-                                                                            .withOpacity(
-                                                                              0.15,
-                                                                            )
-                                                                        : null,
+                                                                        index
+                                                                    ? primaryColor
+                                                                          .withOpacity(
+                                                                            0.15,
+                                                                          )
+                                                                    : null,
                                                                 borderRadius:
                                                                     BorderRadius.circular(
                                                                       15.r,
@@ -531,9 +536,9 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                                                                 size: 30,
                                                                 color:
                                                                     selectedCategory ==
-                                                                            index
-                                                                        ? primaryDarkColor
-                                                                        : textColor,
+                                                                        index
+                                                                    ? primaryDarkColor
+                                                                    : textColor,
                                                               ),
                                                             ),
                                                             SizedBox(width: 10),
@@ -542,17 +547,17 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                                                               style: TextStyle(
                                                                 fontSize:
                                                                     selectedCategory ==
-                                                                            index
-                                                                        ? 18
-                                                                        : 16,
+                                                                        index
+                                                                    ? 18
+                                                                    : 16,
                                                                 fontWeight:
                                                                     FontWeight
                                                                         .w600,
                                                                 color:
                                                                     selectedCategory ==
-                                                                            index
-                                                                        ? primaryDarkColor
-                                                                        : textColor,
+                                                                        index
+                                                                    ? primaryDarkColor
+                                                                    : textColor,
                                                               ),
                                                             ),
                                                           ],
@@ -562,17 +567,17 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                                                               primaryColor,
                                                           radius:
                                                               selectedCategory ==
-                                                                      index
-                                                                  ? 12
-                                                                  : 0,
+                                                                  index
+                                                              ? 12
+                                                              : 0,
                                                           child: Icon(
                                                             Icons.check,
                                                             color: Colors.white,
                                                             size:
                                                                 selectedCategory ==
-                                                                        index
-                                                                    ? 15
-                                                                    : 0,
+                                                                    index
+                                                                ? 15
+                                                                : 0,
                                                           ),
                                                         ),
                                                       ],
@@ -605,50 +610,14 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                                   return null;
                                 },
                               ),
-                              Row(
-                                spacing: 5,
-                                children: [
-                                  Expanded(
-                                    child: CustomFormField(
-                                      hasTitle: true,
-                                      textColor: textColor,
-                                      keyboardType: TextInputType.number,
-                                      title: S.of(context).delivery_days,
-                                      hint: S.of(context).delivery_days_hint,
-                                      onTap: () {},
-                                      controller: deliveryDaysController,
-                                      validator: (value) {
-                                        if (value == null ||
-                                            value.trim().isEmpty) {
-                                          return S
-                                              .of(context)
-                                              .delivery_days_validation;
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: CustomFormField(
-                                      hasTitle: true,
-                                      textColor: textColor,
-                                      keyboardType: TextInputType.number,
-                                      title: S.of(context).avg_response,
-                                      hint: S.of(context).avg_response_hint,
-                                      onTap: () {},
-                                      controller: avgResponseTimeController,
-                                      validator: (value) {
-                                        if (value == null ||
-                                            value.trim().isEmpty) {
-                                          return S
-                                              .of(context)
-                                              .avg_response_validation;
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                  ),
-                                ],
+                              DeliveryOptionsSheet(
+                                emiratesMap: emiratesMap,
+                                initialOptions: deliveryOptions,
+                                onSave: (options) {
+                                  setState(() {
+                                    deliveryOptions = options;
+                                  });
+                                },
                               ),
                             ],
                           ),
@@ -703,28 +672,25 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                               },
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(400),
-                                child:
-                                    selectedShopProfilePic == null
-                                        ? Material(
-                                          color: lightGreyColor.withOpacity(
-                                            0.3,
-                                          ),
-                                          child: SizedBox(
-                                            height: 0.18.sh,
-                                            width: 0.18.sh,
-                                            child: Icon(
-                                              Icons.add,
-                                              size: 40,
-                                              color: greyColor,
-                                            ),
-                                          ),
-                                        )
-                                        : Image.file(
-                                          File(selectedShopProfilePic!.path),
-                                          fit: BoxFit.cover,
+                                child: selectedShopProfilePic == null
+                                    ? Material(
+                                        color: lightGreyColor.withOpacity(0.3),
+                                        child: SizedBox(
                                           height: 0.18.sh,
                                           width: 0.18.sh,
+                                          child: Icon(
+                                            Icons.add,
+                                            size: 40,
+                                            color: greyColor,
+                                          ),
                                         ),
+                                      )
+                                    : Image.file(
+                                        File(selectedShopProfilePic!.path),
+                                        fit: BoxFit.cover,
+                                        height: 0.18.sh,
+                                        width: 0.18.sh,
+                                      ),
                               ),
                             ),
                             SizedBox(height: 10.h),
@@ -789,28 +755,27 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                                   },
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(30.r),
-                                    child:
-                                        selectedShopCoverPic == null
-                                            ? Material(
-                                              color: lightGreyColor.withOpacity(
-                                                0.3,
-                                              ),
-                                              child: SizedBox(
-                                                height: bannerHeight,
-                                                width: bannerWidth,
-                                                child: Icon(
-                                                  Icons.add,
-                                                  size: 40,
-                                                  color: greyColor,
-                                                ),
-                                              ),
-                                            )
-                                            : Image.file(
-                                              File(selectedShopCoverPic!.path),
-                                              fit: BoxFit.cover,
+                                    child: selectedShopCoverPic == null
+                                        ? Material(
+                                            color: lightGreyColor.withOpacity(
+                                              0.3,
+                                            ),
+                                            child: SizedBox(
                                               height: bannerHeight,
                                               width: bannerWidth,
+                                              child: Icon(
+                                                Icons.add,
+                                                size: 40,
+                                                color: greyColor,
+                                              ),
                                             ),
+                                          )
+                                        : Image.file(
+                                            File(selectedShopCoverPic!.path),
+                                            fit: BoxFit.cover,
+                                            height: bannerHeight,
+                                            width: bannerWidth,
+                                          ),
                                   ),
                                 ),
                                 SizedBox(height: 10.h),
@@ -910,27 +875,26 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                                         borderRadius: BorderRadius.circular(
                                           30.r,
                                         ),
-                                        child:
-                                            licenceImage == null
-                                                ? Material(
-                                                  color: lightGreyColor
-                                                      .withOpacity(0.3),
-                                                  child: SizedBox(
-                                                    height: bannerHeight,
-                                                    width: bannerWidth,
-                                                    child: Icon(
-                                                      Icons.add,
-                                                      size: 40,
-                                                      color: greyColor,
-                                                    ),
-                                                  ),
-                                                )
-                                                : Image.file(
-                                                  File(licenceImage!.path),
-                                                  fit: BoxFit.cover,
+                                        child: licenceImage == null
+                                            ? Material(
+                                                color: lightGreyColor
+                                                    .withOpacity(0.3),
+                                                child: SizedBox(
                                                   height: bannerHeight,
                                                   width: bannerWidth,
+                                                  child: Icon(
+                                                    Icons.add,
+                                                    size: 40,
+                                                    color: greyColor,
+                                                  ),
                                                 ),
+                                              )
+                                            : Image.file(
+                                                File(licenceImage!.path),
+                                                fit: BoxFit.cover,
+                                                height: bannerHeight,
+                                                width: bannerWidth,
+                                              ),
                                       ),
                                     ),
                                     SizedBox(height: 10.h),
@@ -1018,11 +982,11 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                                     );
                                     setState(() {});
 
-                                    final tempShopId =
-                                        FirebaseFirestore.instance
-                                            .collection('shops')
-                                            .doc()
-                                            .id;
+                                    final tempShopId = FirebaseFirestore
+                                        .instance
+                                        .collection('shops')
+                                        .doc()
+                                        .id;
                                     userCubit.tempShopId = tempShopId;
 
                                     final overlay = Overlay.of(context);
@@ -1032,75 +996,66 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
 
                                     void showUploadOverlay() {
                                       loaderEntry = OverlayEntry(
-                                        builder:
-                                            (context) => Positioned(
-                                              top: 50,
-                                              left: 20,
-                                              right: 20,
-                                              child: Material(
-                                                elevation: 10,
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                color: Colors.black87,
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 16,
-                                                        vertical: 14,
-                                                      ),
-                                                  child: ValueListenableBuilder<
-                                                    double
-                                                  >(
-                                                    valueListenable:
-                                                        progressNotifier,
-                                                    builder:
-                                                        (
-                                                          context,
-                                                          value,
-                                                          _,
-                                                        ) => Column(
-                                                          mainAxisSize:
-                                                              MainAxisSize.min,
-                                                          children: [
-                                                            LinearProgressIndicator(
-                                                              value: value,
-                                                              backgroundColor:
-                                                                  Colors
-                                                                      .grey[300],
-                                                              color:
-                                                                  Colors.orange,
-                                                            ),
-                                                            const SizedBox(
-                                                              height: 10,
-                                                            ),
-                                                            Text(
-                                                              '${S.of(context).uploading} ${(value * 100).toStringAsFixed(0)}%',
-                                                              style: const TextStyle(
-                                                                color:
-                                                                    Colors
-                                                                        .white,
-                                                              ),
-                                                            ),
-                                                            const SizedBox(
-                                                              height: 5,
-                                                            ),
-                                                            Text(
-                                                              S
-                                                                  .of(context)
-                                                                  .keep_screen_open,
-                                                              style: TextStyle(
-                                                                color:
-                                                                    Colors
-                                                                        .white70,
-                                                                fontSize: 12,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
+                                        builder: (context) => Positioned(
+                                          top: 50,
+                                          left: 20,
+                                          right: 20,
+                                          child: Material(
+                                            elevation: 10,
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            color: Colors.black87,
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 16,
+                                                    vertical: 14,
                                                   ),
-                                                ),
+                                              child: ValueListenableBuilder<double>(
+                                                valueListenable:
+                                                    progressNotifier,
+                                                builder: (context, value, _) =>
+                                                    Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        LinearProgressIndicator(
+                                                          value: value,
+                                                          backgroundColor:
+                                                              Colors.grey[300],
+                                                          color: Colors.orange,
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 10,
+                                                        ),
+                                                        Text(
+                                                          '${S.of(context).uploading} ${(value * 100).toStringAsFixed(0)}%',
+                                                          style:
+                                                              const TextStyle(
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 5,
+                                                        ),
+                                                        Text(
+                                                          S
+                                                              .of(context)
+                                                              .keep_screen_open,
+                                                          style: TextStyle(
+                                                            color:
+                                                                Colors.white70,
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
                                               ),
                                             ),
+                                          ),
+                                        ),
                                       );
                                       overlay.insert(loaderEntry);
                                     }
@@ -1133,19 +1088,14 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                                       selectedShopCoverPic != null) {
                                     await userCubit.registerShop(
                                       shopName: shopNameController.text.trim(),
-                                      shopCategory:
-                                          shopTypeController.text.trim(),
-                                      shopDescription:
-                                          shopDescController.text.trim(),
+                                      shopCategory: shopTypeController.text
+                                          .trim(),
+                                      shopDescription: shopDescController.text
+                                          .trim(),
                                       sellerLicenseNumber: int.parse(
                                         licenceController.text,
                                       ),
-                                      deliveryDays: num.parse(
-                                        deliveryDaysController.text.trim(),
-                                      ),
-                                      avgResponseTime: num.parse(
-                                        avgResponseTimeController.text.trim(),
-                                      ),
+                                      deliveryOptions: deliveryOptions,
                                       shopLogo: selectedShopProfilePic!,
                                       shopBanner: selectedShopCoverPic!,
                                       sellerLicenseImage: licenceImage!,
@@ -1166,11 +1116,11 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
                                 child: Text(
                                   selectedPage == 2
                                       ? state is UserRegisterSellerSuccessState
-                                          ? S.of(context).now_you_are_seller
-                                          : state
-                                              is UserRegisterSellerLoadingState
-                                          ? "${S.of(context).loading}..."
-                                          : S.of(context).finish
+                                            ? S.of(context).now_you_are_seller
+                                            : state
+                                                  is UserRegisterSellerLoadingState
+                                            ? "${S.of(context).loading}..."
+                                            : S.of(context).finish
                                       : S.of(context).next,
                                   style: const TextStyle(
                                     height: 0.8,
@@ -1203,5 +1153,159 @@ class _RegisterAsSellerState extends State<RegisterAsSeller> {
   Future<XFile?> galleryPicker() async {
     XFile? newImage = await ImagePickerUtils.galleryOneImagePicker();
     return newImage;
+  }
+}
+
+class DeliveryOptionsSheet extends StatefulWidget {
+  final Map<String, String> emiratesMap;
+  final List<Map<String, dynamic>> initialOptions;
+  final Function(List<Map<String, dynamic>>) onSave;
+
+  const DeliveryOptionsSheet({
+    super.key,
+    required this.emiratesMap,
+    required this.initialOptions,
+    required this.onSave,
+  });
+
+  @override
+  DeliveryOptionsSheetState createState() => DeliveryOptionsSheetState();
+}
+
+class DeliveryOptionsSheetState extends State<DeliveryOptionsSheet> {
+  late Map<String, TextEditingController> priceControllers;
+  late Map<String, TextEditingController> daysControllers;
+
+  @override
+  void initState() {
+    super.initState();
+    priceControllers = {};
+    daysControllers = {};
+
+    for (var entry in widget.emiratesMap.entries) {
+      final emirateKey = entry.value;
+
+      // ✅ استخدم orElse علشان متاخدش error لو مفيش option محفوظ
+      final saved = widget.initialOptions.firstWhere(
+        (opt) => opt['emirate'] == emirateKey,
+        orElse: () => {}, // يرجع Map فاضي لو مفيش
+      );
+
+      priceControllers[emirateKey] = TextEditingController(
+        text: saved['price']?.toString() ?? '',
+      );
+      daysControllers[emirateKey] = TextEditingController(
+        text: saved['days']?.toString() ?? '',
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    for (var c in priceControllers.values) {
+      c.dispose();
+    }
+    for (var c in daysControllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Column(
+        children: [
+          for (var entry in widget.emiratesMap.entries)
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.key,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: priceControllers[entry.value],
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: S.of(context).price,
+                          ),
+                          onChanged: (price) {
+                            if (!mounted) return; // ✅ منع الكرَاش بعد dispose
+
+                            final options = widget.emiratesMap.entries.map((
+                              entry,
+                            ) {
+                              final emirateKey = entry.value;
+                              return {
+                                'emirate': emirateKey,
+                                'price':
+                                    int.tryParse(
+                                      priceControllers[emirateKey]!.text,
+                                    ) ??
+                                    0,
+                                'days':
+                                    int.tryParse(
+                                      daysControllers[emirateKey]!.text,
+                                    ) ??
+                                    0,
+                              };
+                            }).toList();
+
+                            widget.onSave(options);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: daysControllers[entry.value],
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: S.of(context).delivery_days,
+                          ),
+                          onChanged: (days) {
+                            if (!mounted) return; // ✅ منع الكرَاش بعد dispose
+
+                            final options = widget.emiratesMap.entries.map((
+                              entry,
+                            ) {
+                              final emirateKey = entry.value;
+                              return {
+                                'emirate': emirateKey,
+                                'price':
+                                    int.tryParse(
+                                      priceControllers[emirateKey]!.text,
+                                    ) ??
+                                    0,
+                                'days':
+                                    int.tryParse(
+                                      daysControllers[emirateKey]!.text,
+                                    ) ??
+                                    0,
+                              };
+                            }).toList();
+
+                            widget.onSave(options);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

@@ -68,18 +68,104 @@ class UserCubit extends Cubit<UserState> {
 
   Future<UserModel> getUserInfoById(String userId) async {
     try {
-      final doc = await FirebaseFirestore.instance
+      final query = await FirebaseFirestore.instance
           .collection('users')
-          .doc(userId)
+          .where('uId', isEqualTo: userId)
+          .limit(1)
           .get();
 
-      if (doc.exists && doc.data() != null) {
-        return UserModel.fromJson(doc.data()!);
+      if (query.docs.isNotEmpty) {
+        final data = query.docs.first.data();
+        print('✅ User found: $data');
+        return UserModel.fromJson(data);
       } else {
+        print('⚠️ No user found for userId: $userId');
         throw Exception('User not found');
       }
     } catch (e) {
+      print('🔥 Error fetching user: $e');
       throw Exception('Failed to fetch user info: $e');
+    }
+  }
+
+  // 🚨 NEW METHOD: Update FCM Token
+  Future<void> updateUserFCMToken({required String token}) async {
+    if (uId.isEmpty) {
+      log('❌ Cannot update FCM token: uId is empty.');
+      return;
+    }
+
+    try {
+      emit(UserUpdateFCMTokenLoadingState());
+
+      final userRef = firestore.collection('users').doc(uId);
+      final userSnapshot = await userRef.get();
+
+      if (userSnapshot.exists) {
+        final userData = userSnapshot.data();
+        final List<dynamic> existingTokens = userData?['fcmTokens'] ?? [];
+
+        // Check if the token already exists to prevent unnecessary writes
+        if (!existingTokens.contains(token)) {
+          // Add the new token to the array of tokens
+          // You might want to ensure only one token is stored per device,
+          // or use an array for multiple devices. Based on your current logic,
+          // I will ensure the new token is present.
+
+          final updatedTokens = List<String>.from(
+            existingTokens.where((t) => t != null && t.isNotEmpty),
+          );
+
+          // Remove the old fcmDeviceToken from vars and add the new one.
+          // Note: fcmDeviceToken should be updated here to hold the new token.
+          fcmDeviceToken = token;
+          if (!updatedTokens.contains(token)) {
+            updatedTokens.add(token);
+          }
+
+          await userRef.update({'fcmTokens': updatedTokens});
+
+          log('✅ User FCM token updated successfully for user: $uId');
+        } else {
+          log('✅ User FCM token already exists: $uId');
+          fcmDeviceToken =
+              token; // Ensure the global var is set even if not updated in DB
+        }
+      } else {
+        log(
+          '⚠️ User document not found for uId: $uId. Cannot update FCM token.',
+        );
+      }
+
+      // Also update seller shop's token if the user is a seller
+      if (currentUserModel.shops.isNotEmpty) {
+        for (final shop in currentUserModel.shops) {
+          final shopRef = firestore.collection('shops').doc(shop['id']);
+          final shopSnapshot = await shopRef.get();
+
+          if (shopSnapshot.exists) {
+            final shopData = shopSnapshot.data();
+            final List<dynamic> existingShopTokens =
+                shopData?['fcmTokens'] ?? [];
+
+            if (!existingShopTokens.contains(token)) {
+              final updatedShopTokens = List<String>.from(
+                existingShopTokens.where((t) => t != null && t.isNotEmpty),
+              );
+              if (!updatedShopTokens.contains(token)) {
+                updatedShopTokens.add(token);
+              }
+              await shopRef.update({'fcmTokens': updatedShopTokens});
+              log('✅ Seller Shop FCM token updated for shop: ${shop['id']}');
+            }
+          }
+        }
+      }
+
+      emit(UserUpdateFCMTokenSuccessState());
+    } catch (e) {
+      log('❌ Error updating FCM token: $e');
+      emit(UserUpdateFCMTokenErrorState(e.toString()));
     }
   }
 
@@ -136,123 +222,6 @@ class UserCubit extends Cubit<UserState> {
       '✅ ActivityStatus updated: $mainId → $statusValue in user/shop and ${chatQuery.docs.length} chats',
     );
   }
-
-  // Future<void> updateUserChatStatus(String userId, String statusValue) async {
-  //   try {
-  //     final query =
-  //         await FirebaseFirestore.instance
-  //             .collection('chats')
-  //             .where('participants', arrayContains: userId)
-  //             .get();
-  //
-  //     final isOnline = statusValue == 'online';
-  //
-  //     for (final doc in query.docs) {
-  //       final chatId = doc.id;
-  //
-  //       // Parse chatId to get both IDs
-  //       final parts = chatId.split('_');
-  //       if (parts.length != 2) continue;
-  //
-  //       String id1 = parts[0];
-  //       String id2 = parts[1];
-  //
-  //       // Try to get the shop document from shops collection
-  //       String shopId = id1.startsWith('shop_') ? id1 : id2;
-  //
-  //       final shopDoc =
-  //           await FirebaseFirestore.instance
-  //               .collection('shops')
-  //               .doc(shopId)
-  //               .get();
-  //
-  //       if (!shopDoc.exists) continue;
-  //
-  //       final sellerId = shopDoc.data()?['sellerId'];
-  //       if (sellerId == null) continue;
-  //
-  //       // Define who is the other participant
-  //       final otherId =
-  //           sellerId == userId
-  //               ? id1 == sellerId
-  //                   ? id2
-  //                   : id1
-  //               : sellerId;
-  //
-  //       // Update only if userId is the receiver in this chat
-  //       final receiverIdInThisChat = doc['sentBy'] == userId ? otherId : userId;
-  //
-  //       if (receiverIdInThisChat == userId) {
-  //         await firestore.collection('chats').doc(chatId).update({
-  //           'receiverOnline': isOnline,
-  //         });
-  //         log("✅ Updated chat $chatId with receiverOnline: $isOnline");
-  //       }
-  //     }
-  //   } catch (e) {
-  //     log("❌ Error updating chat statuses: $e");
-  //   }
-  // }
-  //
-  // Future<void> updateUserChatSenderStatus(
-  //   String userId,
-  //   String statusValue,
-  // ) async {
-  //   try {
-  //     final query =
-  //         await FirebaseFirestore.instance
-  //             .collection('chats')
-  //             .where('participants', arrayContains: userId)
-  //             .get();
-  //
-  //     final isOnline = statusValue == 'online';
-  //
-  //     for (final doc in query.docs) {
-  //       final chatId = doc.id;
-  //
-  //       // Parse chatId to get both IDs
-  //       final parts = chatId.split('_');
-  //       if (parts.length != 2) continue;
-  //
-  //       String id1 = parts[0];
-  //       String id2 = parts[1];
-  //
-  //       // Try to get the shop document from shops collection
-  //       String shopId = id1.startsWith('shop_') ? id1 : id2;
-  //
-  //       final shopDoc =
-  //           await FirebaseFirestore.instance
-  //               .collection('shops')
-  //               .doc(shopId)
-  //               .get();
-  //
-  //       if (!shopDoc.exists) continue;
-  //
-  //       final sellerId = shopDoc.data()?['sellerId'];
-  //       if (sellerId == null) continue;
-  //
-  //       // Define who is the other participant
-  //       final otherId =
-  //           sellerId == userId
-  //               ? id1 == sellerId
-  //                   ? id2
-  //                   : id1
-  //               : sellerId;
-  //
-  //       // Update only if userId is the sender in this chat
-  //       final senderIdInThisChat = doc['sentBy'] == userId ? userId : otherId;
-  //
-  //       if (senderIdInThisChat == userId) {
-  //         await firestore.collection('chats').doc(chatId).update({
-  //           'senderOnline': isOnline,
-  //         });
-  //         log("✅ Updated chat $chatId with senderOnline: $isOnline");
-  //       }
-  //     }
-  //   } catch (e) {
-  //     log("❌ Error updating sender chat statuses: $e");
-  //   }
-  // }
 
   Future<String> uploadImage({
     required XFile image,
@@ -342,8 +311,7 @@ class UserCubit extends Cubit<UserState> {
     required String shopName,
     required String shopCategory,
     required String shopDescription,
-    required num deliveryDays,
-    required num avgResponseTime,
+    required List<Map<String, dynamic>> deliveryOptions,
     required num sellerLicenseNumber,
     required XFile shopLogo,
     required XFile shopBanner,
@@ -454,8 +422,8 @@ class UserCubit extends Cubit<UserState> {
         sellerLicenseNumber: sellerLicenseNumber,
         sellerLicenseImageUrl: sellerLicenseImageUrl,
         emirate: currentUserModel.emirate,
-        deliveryDays: deliveryDays,
-        avgResponseTime: avgResponseTime,
+        deliveryOptions: deliveryOptions,
+        avgResponseTime: 0,
         numberOfRating: 0,
         sumOfRating: 0,
         activityStatus: ShopActivityStatus.online,
@@ -814,7 +782,7 @@ class UserCubit extends Cubit<UserState> {
         docId: uId,
         imageName: 'profileImage',
       );
-      data['imageUrl'] = imageUrl;
+      data['profilePicture'] = imageUrl;
     }
 
     try {

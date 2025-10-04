@@ -28,10 +28,9 @@ class S {
   static const AppLocalizationDelegate delegate = AppLocalizationDelegate();
 
   static Future<S> load(Locale locale) {
-    final name =
-        (locale.countryCode?.isEmpty ?? false)
-            ? locale.languageCode
-            : locale.toString();
+    final name = (locale.countryCode?.isEmpty ?? false)
+        ? locale.languageCode
+        : locale.toString();
     final localeName = Intl.canonicalizedLocale(name);
     return initializeMessages(localeName).then((_) {
       Intl.defaultLocale = localeName;
@@ -4898,6 +4897,128 @@ class S {
   /// `See it now`
   String get see_it_now {
     return Intl.message('See it now', name: 'see_it_now', desc: '', args: []);
+  }
+
+  /// `Enter address name`
+  String get enter_address_name {
+    return Intl.message(
+      'Enter address name',
+      name: 'enter_address_name',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Location already saved`
+  String get location_already_saved {
+    return Intl.message(
+      'Location already saved',
+      name: 'location_already_saved',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select this location`
+  String get select_this_location {
+    return Intl.message(
+      'Select this location',
+      name: 'select_this_location',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{count, plural, one {second} other {seconds}}`
+  String second(num count) {
+    return Intl.plural(
+      count,
+      one: 'second',
+      other: 'seconds',
+      name: 'second',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{count, plural, one {minute} other {minutes}}`
+  String minute(num count) {
+    return Intl.plural(
+      count,
+      one: 'minute',
+      other: 'minutes',
+      name: 'minute',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{count, plural, one {hour} other {hours}}`
+  String hour(num count) {
+    return Intl.plural(
+      count,
+      one: 'hour',
+      other: 'hours',
+      name: 'hour',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{count, plural, one {day} other {days}}`
+  String day(num count) {
+    return Intl.plural(
+      count,
+      one: 'day',
+      other: 'days',
+      name: 'day',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{count, plural, one {week} other {weeks}}`
+  String week(num count) {
+    return Intl.plural(
+      count,
+      one: 'week',
+      other: 'weeks',
+      name: 'week',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{count, plural, one {month} other {months}}`
+  String month(num count) {
+    return Intl.plural(
+      count,
+      one: 'month',
+      other: 'months',
+      name: 'month',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `No favorite shops`
+  String get no_fav_shops {
+    return Intl.message(
+      'No favorite shops',
+      name: 'no_fav_shops',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No favorite products`
+  String get no_fav_products {
+    return Intl.message(
+      'No favorite products',
+      name: 'no_fav_products',
+      desc: '',
+      args: [],
+    );
   }
 }
 

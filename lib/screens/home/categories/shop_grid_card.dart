@@ -30,9 +30,20 @@ class _ShopGridCardState extends State<ShopGridCard> {
   List uniqueSubcategories = [];
   late num rating;
 
+  final userEmirate = currentUserModel.emirate;
+  late Map<String, dynamic> option;
+  late num deliveryDays;
+
   @override
   void initState() {
     super.initState();
+
+    option = widget.shopModel.deliveryOptions
+        .cast<Map<String, dynamic>>()
+        .firstWhere((opt) => opt['emirate'] == userEmirate);
+
+    deliveryDays = option['days'] ?? 0;
+
     final favCubit = FavoritesCubit.get(context);
     final shopId = widget.shopModel.shopId;
     _isFavoritedLocal =
@@ -463,7 +474,7 @@ class _ShopGridCardState extends State<ShopGridCard> {
                                   ),
                                   SizedBox(width: 2.w),
                                   Text(
-                                    '${widget.shopModel.deliveryDays} ${S.of(context).days}',
+                                    '${deliveryDays} ${S.of(context).days}',
                                     style: TextStyle(
                                       color: Colors.grey,
                                       fontSize: 11.sp,
@@ -484,7 +495,7 @@ class _ShopGridCardState extends State<ShopGridCard> {
                             ),
                             SizedBox(width: 2.w),
                             Text(
-                              '${S.of(context).response_time}: ${widget.shopModel.avgResponseTime} ${S.of(context).minutes}',
+                              '${S.of(context).response_time}: ${widget.shopModel.formattedAvgResponseTime}',
                               style: TextStyle(
                                 color: Colors.grey,
                                 fontSize: 11.sp,

@@ -154,7 +154,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                       clipBehavior: Clip.none,
                       children: [
                         Container(
-                          height: 0.2.sh,
+                          height: 0.25.sh,
                           color: primaryColor,
                           width: double.infinity,
                           child: Opacity(
@@ -170,44 +170,45 @@ class _AccountSettingsState extends State<AccountSettings> {
                         Positioned(
                           left: 7,
                           right: 7,
-                          top: 40.h,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Material(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                child: InkWell(
+                          child: SafeArea(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Material(
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(12),
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: Padding(
-                                    padding: EdgeInsets.all(7),
-                                    child: Icon(
-                                      backIcon(),
-                                      color: textColor,
-                                      size: 26,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                    },
+                                    child: Padding(
+                                      padding: EdgeInsets.all(7),
+                                      child: Icon(
+                                        backIcon(),
+                                        color: textColor,
+                                        size: 26,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              Text(
-                                S.of(context).account_settings,
-                                style: TextStyle(
-                                  fontSize: 23,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                Text(
+                                  S.of(context).account_settings,
+                                  style: TextStyle(
+                                    fontSize: 23,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 37),
-                            ],
+                                SizedBox(width: 37),
+                              ],
+                            ),
                           ),
                         ),
                         Positioned(
                           left: 0,
                           right: 0,
-                          bottom: -30,
+                          bottom: -80,
                           child: Center(
                             child: Stack(
                               children: [
@@ -258,28 +259,45 @@ class _AccountSettingsState extends State<AccountSettings> {
                                               borderRadius:
                                                   BorderRadius.circular(200.r),
                                               child: selectedImage == null
-                                                  ? CachedNetworkImage(
-                                                      imageUrl: isSeller
-                                                          ? currentShopModel!
-                                                                .shopLogoUrl
-                                                          : currentUserModel
-                                                                .profilePicture
-                                                                .toString(),
-                                                      progressIndicatorBuilder:
-                                                          (
-                                                            context,
-                                                            url,
-                                                            progress,
-                                                          ) =>
-                                                              shimmerPlaceholder(
-                                                                height: 150.h,
-                                                                width: 150.h,
-                                                                radius: 200.r,
-                                                              ),
-                                                      height: 150.h,
-                                                      width: 150.h,
-                                                      fit: BoxFit.cover,
-                                                    )
+                                                  ? (isSeller
+                                                            ? (currentShopModel!
+                                                                  .shopLogoUrl
+                                                                  .isEmpty)
+                                                            : (currentUserModel
+                                                                          .profilePicture ==
+                                                                      null ||
+                                                                  currentUserModel
+                                                                      .profilePicture!
+                                                                      .isEmpty))
+                                                        ? Icon(
+                                                            IconlyBold.profile,
+                                                            size: 55,
+                                                          )
+                                                        : CachedNetworkImage(
+                                                            imageUrl: isSeller
+                                                                ? currentShopModel!
+                                                                      .shopLogoUrl
+                                                                : currentUserModel
+                                                                      .profilePicture
+                                                                      .toString(),
+                                                            progressIndicatorBuilder:
+                                                                (
+                                                                  context,
+                                                                  url,
+                                                                  progress,
+                                                                ) =>
+                                                                    shimmerPlaceholder(
+                                                                      height:
+                                                                          150.h,
+                                                                      width:
+                                                                          150.h,
+                                                                      radius:
+                                                                          200.r,
+                                                                    ),
+                                                            height: 150.h,
+                                                            width: 150.h,
+                                                            fit: BoxFit.cover,
+                                                          )
                                                   : Image.file(
                                                       File(selectedImage!.path),
                                                       fit: BoxFit.cover,
@@ -541,25 +559,54 @@ class _AccountSettingsState extends State<AccountSettings> {
                       spacing: 10,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CustomFormField(
-                          hasTitle: true,
-                          validator: (value) {
-                            if (value!.isEmpty) {
-                              return S.of(context).username_validation;
-                            }
-                            return null;
-                          },
-                          textColor: textColor,
-                          title: S.of(context).username,
-                          hint: S.of(context).fake_username_hint,
-                          onTap: () {},
-                          controller: usernameController,
-                          onChanged: (val) {
-                            setState(() {
-                              usernameController.text = val.toString();
-                              checkForChanges();
-                            });
-                          },
+                        Stack(
+                          children: [
+                            CustomFormField(
+                              hasTitle: true,
+                              validator: (value) {
+                                if (value!.isEmpty) {
+                                  return S.of(context).username_validation;
+                                }
+                                return null;
+                              },
+                              textColor: textColor,
+                              title: S.of(context).username,
+                              hint: S.of(context).fake_username_hint,
+                              onTap: () {},
+                              controller: usernameController,
+                              onChanged: (val) {
+                                setState(() {
+                                  usernameController.text = val.toString();
+                                  checkForChanges();
+                                });
+                              },
+                            ),
+                            Positioned(
+                              left: lang == 'ar' ? 10 : null,
+                              right: lang == 'en' ? 10 : null,
+                              bottom: 8,
+                              child: Chip(
+                                label: Text(
+                                  usernameController.text == "null"
+                                      ? S.of(context).not_added
+                                      : S.of(context).authentic,
+                                  textDirection: ui.TextDirection.ltr,
+                                  style: TextStyle(
+                                    color: usernameController.text == "null"
+                                        ? Colors.red
+                                        : CupertinoColors.systemGreen,
+                                  ),
+                                ),
+                                side: BorderSide.none,
+                                backgroundColor:
+                                    usernameController.text == "null"
+                                    ? Colors.red.withOpacity(0.1)
+                                    : CupertinoColors.systemGreen.withOpacity(
+                                        0.15,
+                                      ),
+                              ),
+                            ),
+                          ],
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1104,17 +1151,21 @@ class _AccountSettingsState extends State<AccountSettings> {
                                   }
                                 : null,
                             child: Center(
-                              child: Text(
-                                S.of(context).save,
-                                style: TextStyle(
-                                  height: 0.8,
-                                  color: hasChanges
-                                      ? Colors.white
-                                      : Colors.white.withOpacity(0.4),
-                                  fontSize: 21.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              child: state is UserUploadImageLoadingState
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                  : Text(
+                                      S.of(context).save,
+                                      style: TextStyle(
+                                        height: 0.8,
+                                        color: hasChanges
+                                            ? Colors.white
+                                            : Colors.white.withOpacity(0.4),
+                                        fontSize: 21.sp,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                             ),
                           ),
                         ),

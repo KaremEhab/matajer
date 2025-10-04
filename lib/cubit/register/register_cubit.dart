@@ -112,7 +112,7 @@ class RegisterCubit extends Cubit<RegisterState> {
       gender: gender,
       age: age,
       emirate: emirate,
-      accountCreatedAt: Timestamp.now(),
+      accountCreatedAt: DateTime.now(),
       activityStatus: UserActivityStatus.online,
       newProductsNotification: true,
       commentsNotification: false,

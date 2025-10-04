@@ -75,17 +75,18 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
                                   child: InkWell(
                                     borderRadius: BorderRadius.circular(13.r),
                                     onTap: () {
-                                      if (state
-                                          is RegisterCreateUserSuccessState) {
-                                        showFlushBar(
-                                          context: context,
-                                          message: S
-                                              .of(context)
-                                              .registration_warning,
-                                        );
-                                      } else {
-                                        Navigator.pop(context);
-                                      }
+                                      Navigator.pop(context);
+                                      // if (state
+                                      //     is RegisterCreateUserSuccessState) {
+                                      //   showFlushBar(
+                                      //     context: context,
+                                      //     message: S
+                                      //         .of(context)
+                                      //         .registration_warning,
+                                      //   );
+                                      // } else {
+                                      //   Navigator.pop(context);
+                                      // }
                                     },
                                     child: Padding(
                                       padding: const EdgeInsets.all(10),

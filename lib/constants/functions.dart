@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:iconly/iconly.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:matajer/constants/colors.dart';
@@ -439,14 +440,20 @@ class _ProfileFlipViewState extends State<_ProfileFlipView>
         fit: BoxFit.cover,
       );
     } else {
-      return CachedNetworkImage(
-        imageUrl: widget.imageUrl!,
-        progressIndicatorBuilder: (context, url, progress) =>
-            shimmerPlaceholder(height: 0.5.sh, width: 0.9.sw, radius: 200.r),
-        height: 0.5.sh,
-        width: 0.9.sw,
-        fit: BoxFit.cover,
-      );
+      return widget.imageUrl == null || widget.imageUrl!.isEmpty
+          ? Icon(IconlyBold.profile, size: 155, color: Colors.white)
+          : CachedNetworkImage(
+              imageUrl: widget.imageUrl!,
+              progressIndicatorBuilder: (context, url, progress) =>
+                  shimmerPlaceholder(
+                    height: 0.5.sh,
+                    width: 0.9.sw,
+                    radius: 200.r,
+                  ),
+              height: 0.5.sh,
+              width: 0.9.sw,
+              fit: BoxFit.cover,
+            );
     }
   }
 
@@ -524,6 +531,9 @@ class _ProfileFlipViewState extends State<_ProfileFlipView>
                                   File(widget.file!.path),
                                   fit: BoxFit.cover,
                                 )
+                              : widget.imageUrl == null ||
+                                    widget.imageUrl!.isEmpty
+                              ? Icon(IconlyBold.profile, size: 55)
                               : CachedNetworkImage(
                                   imageUrl: widget.imageUrl!,
                                   fit: BoxFit.cover,
@@ -596,10 +606,10 @@ String? validateUsername(BuildContext context, String? value) {
   }
 
   // Only alphabetic characters and spaces allowed (English + Arabic)
-  final regex = RegExp(r"^[A-Za-z\u0600-\u06FF\s]+$");
-  if (!regex.hasMatch(name)) {
-    return S.of(context).name_can_only_contain_letters;
-  }
+  // final regex = RegExp(r"^[A-Za-z\u0600-\u06FF\s]+$");
+  // if (!regex.hasMatch(name)) {
+  //   return S.of(context).name_can_only_contain_letters;
+  // }
 
   // Prevents single word gibberish longer than 20 characters
   if (name.length > 20 && !name.contains(" ")) {

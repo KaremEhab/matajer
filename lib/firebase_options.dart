@@ -63,9 +63,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '63640744288',
     projectId: 'matajr-40a00',
     storageBucket: 'matajr-40a00.appspot.com',
-    androidClientId: '63640744288-03mlijj18niva34fuundb1684jvkoh7h.apps.googleusercontent.com',
-    iosClientId: '63640744288-goi9svb23cmjosg9lq5jda6qgtvk6r7s.apps.googleusercontent.com',
-    iosBundleId: 'com.matajer.matajer',
+    androidClientId:
+        '63640744288-03mlijj18niva34fuundb1684jvkoh7h.apps.googleusercontent.com',
+    iosClientId:
+        '63640744288-goi9svb23cmjosg9lq5jda6qgtvk6r7s.apps.googleusercontent.com',
+    iosBundleId: 'com.matajir.matajir',
   );
-
 }

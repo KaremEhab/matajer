@@ -1,4 +1,4 @@
-package com.matajer.matajer
+package com.matajir.matajir
 
 import io.flutter.embedding.android.FlutterActivity
 

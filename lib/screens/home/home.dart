@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -113,6 +114,9 @@ class HomeState extends State<Home> with AutomaticKeepAliveClientMixin {
     _scrollController.addListener(() {
       homeScrollOffsetNotifier.value = _scrollController.offset;
     });
+
+    log("--------- USER DATA $currentUserModel -----------");
+    log("--------- USER DATA2 ${currentUserModel.toMap().toString()} -----------");
   }
 
   @override

@@ -1,4 +1,3 @@
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -103,19 +102,23 @@ class _ProfileCustomAppBarState extends State<ProfileCustomAppBar> {
                             radius: 15,
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(200.r),
-                              child: CachedNetworkImage(
-                                imageUrl: currentShopModel!.shopLogoUrl,
-                                progressIndicatorBuilder:
-                                    (context, url, progress) =>
-                                        shimmerPlaceholder(
-                                          height: 50,
-                                          width: 50,
-                                          radius: 200.r,
-                                        ),
-                                height: 50,
-                                width: 30,
-                                fit: BoxFit.cover,
-                              ),
+                              child:
+                                  currentShopModel!.shopLogoUrl == null ||
+                                      currentShopModel!.shopLogoUrl.isEmpty
+                                  ? Icon(IconlyBold.profile, size: 18)
+                                  : CachedNetworkImage(
+                                      imageUrl: currentShopModel!.shopLogoUrl,
+                                      progressIndicatorBuilder:
+                                          (context, url, progress) =>
+                                              shimmerPlaceholder(
+                                                height: 50,
+                                                width: 50,
+                                                radius: 200.r,
+                                              ),
+                                      height: 50,
+                                      width: 30,
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                           ),
                         ),
@@ -137,18 +140,23 @@ class _ProfileCustomAppBarState extends State<ProfileCustomAppBar> {
                         radius: 15,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(200.r),
-                          child: CachedNetworkImage(
-                            imageUrl: currentUserModel.profilePicture!,
-                            progressIndicatorBuilder:
-                                (context, url, progress) => shimmerPlaceholder(
+                          child:
+                              currentUserModel.profilePicture == null ||
+                                  currentUserModel.profilePicture!.isEmpty
+                              ? Icon(IconlyBold.profile, size: 18)
+                              : CachedNetworkImage(
+                                  imageUrl: currentUserModel.profilePicture!,
+                                  progressIndicatorBuilder:
+                                      (context, url, progress) =>
+                                          shimmerPlaceholder(
+                                            height: 50,
+                                            width: 50,
+                                            radius: 200.r,
+                                          ),
                                   height: 50,
                                   width: 50,
-                                  radius: 200.r,
+                                  fit: BoxFit.cover,
                                 ),
-                            height: 50,
-                            width: 50,
-                            fit: BoxFit.cover,
-                          ),
                         ),
                       ),
                     ),
@@ -229,6 +237,10 @@ class _ProfileCustomAppBarState extends State<ProfileCustomAppBar> {
                       width: 23,
                     ),
                   ),
+                IconButton(
+                  onPressed: _logout,
+                  icon: const Icon(IconlyLight.logout, color: Colors.white),
+                ),
               ],
             if (isGuest)
               Row(
@@ -336,8 +348,7 @@ class _ProfileCustomAppBarState extends State<ProfileCustomAppBar> {
                                           context: context,
                                           imageUrl: isSeller
                                               ? currentShopModel!.shopLogoUrl
-                                              : currentUserModel
-                                                    .profilePicture!,
+                                              : currentUserModel.profilePicture,
                                         ),
                                         child: Hero(
                                           tag: isSeller
@@ -363,26 +374,41 @@ class _ProfileCustomAppBarState extends State<ProfileCustomAppBar> {
                                                       BorderRadius.circular(
                                                         200.r,
                                                       ),
-                                                  child: CachedNetworkImage(
-                                                    imageUrl: isSeller
-                                                        ? currentShopModel!
-                                                              .shopLogoUrl
-                                                        : currentUserModel
-                                                              .profilePicture!,
-                                                    progressIndicatorBuilder:
-                                                        (
-                                                          context,
-                                                          url,
-                                                          progress,
-                                                        ) => shimmerPlaceholder(
+                                                  child:
+                                                      currentUserModel
+                                                                  .profilePicture ==
+                                                              null ||
+                                                          currentUserModel
+                                                              .profilePicture!
+                                                              .isEmpty
+                                                      ? Icon(
+                                                          IconlyBold.profile,
+                                                          size: 55,
+                                                        )
+                                                      : CachedNetworkImage(
+                                                          imageUrl: isSeller
+                                                              ? currentShopModel!
+                                                                    .shopLogoUrl
+                                                              : currentUserModel
+                                                                    .profilePicture!,
+                                                          progressIndicatorBuilder:
+                                                              (
+                                                                context,
+                                                                url,
+                                                                progress,
+                                                              ) =>
+                                                                  shimmerPlaceholder(
+                                                                    height:
+                                                                        110.h,
+                                                                    width:
+                                                                        110.h,
+                                                                    radius:
+                                                                        200.r,
+                                                                  ),
                                                           height: 110.h,
                                                           width: 110.h,
-                                                          radius: 200.r,
+                                                          fit: BoxFit.cover,
                                                         ),
-                                                    height: 110.h,
-                                                    width: 110.h,
-                                                    fit: BoxFit.cover,
-                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -393,8 +419,7 @@ class _ProfileCustomAppBarState extends State<ProfileCustomAppBar> {
                                   GestureDetector(
                                     onTap: () => showProfilePreview(
                                       context: context,
-                                      imageUrl:
-                                          currentUserModel.profilePicture!,
+                                      imageUrl: currentUserModel.profilePicture,
                                     ),
                                     child: Hero(
                                       tag: currentUserModel.profilePicture!,
@@ -415,20 +440,35 @@ class _ProfileCustomAppBarState extends State<ProfileCustomAppBar> {
                                             child: ClipRRect(
                                               borderRadius:
                                                   BorderRadius.circular(200.r),
-                                              child: CachedNetworkImage(
-                                                imageUrl: currentUserModel
-                                                    .profilePicture!,
-                                                progressIndicatorBuilder:
-                                                    (context, url, progress) =>
-                                                        shimmerPlaceholder(
-                                                          height: 110.h,
-                                                          width: 110.h,
-                                                          radius: 200.r,
-                                                        ),
-                                                height: 110.h,
-                                                width: 110.h,
-                                                fit: BoxFit.cover,
-                                              ),
+                                              child:
+                                                  currentUserModel
+                                                              .profilePicture ==
+                                                          null ||
+                                                      currentUserModel
+                                                          .profilePicture!
+                                                          .isEmpty
+                                                  ? Icon(
+                                                      IconlyBold.profile,
+                                                      size: 55,
+                                                    )
+                                                  : CachedNetworkImage(
+                                                      imageUrl: currentUserModel
+                                                          .profilePicture!,
+                                                      progressIndicatorBuilder:
+                                                          (
+                                                            context,
+                                                            url,
+                                                            progress,
+                                                          ) =>
+                                                              shimmerPlaceholder(
+                                                                height: 110.h,
+                                                                width: 110.h,
+                                                                radius: 200.r,
+                                                              ),
+                                                      height: 110.h,
+                                                      width: 110.h,
+                                                      fit: BoxFit.cover,
+                                                    ),
                                             ),
                                           ),
                                         ),
@@ -450,7 +490,7 @@ class _ProfileCustomAppBarState extends State<ProfileCustomAppBar> {
                                         context: context,
                                         imageUrl: isSeller
                                             ? currentShopModel!.shopLogoUrl
-                                            : currentUserModel.profilePicture!,
+                                            : currentUserModel.profilePicture,
                                       ),
                                       child: Hero(
                                         tag:
@@ -474,26 +514,38 @@ class _ProfileCustomAppBarState extends State<ProfileCustomAppBar> {
                                                     BorderRadius.circular(
                                                       200.r,
                                                     ),
-                                                child: CachedNetworkImage(
-                                                  imageUrl: isSeller
-                                                      ? currentShopModel!
-                                                            .shopLogoUrl
-                                                      : currentUserModel
-                                                            .profilePicture!,
-                                                  progressIndicatorBuilder:
-                                                      (
-                                                        context,
-                                                        url,
-                                                        progress,
-                                                      ) => shimmerPlaceholder(
+                                                child:
+                                                    currentUserModel
+                                                                .profilePicture ==
+                                                            null ||
+                                                        currentUserModel
+                                                            .profilePicture!
+                                                            .isEmpty
+                                                    ? Icon(
+                                                        IconlyBold.profile,
+                                                        size: 55,
+                                                      )
+                                                    : CachedNetworkImage(
+                                                        imageUrl: isSeller
+                                                            ? currentShopModel!
+                                                                  .shopLogoUrl
+                                                            : currentUserModel
+                                                                  .profilePicture!,
+                                                        progressIndicatorBuilder:
+                                                            (
+                                                              context,
+                                                              url,
+                                                              progress,
+                                                            ) =>
+                                                                shimmerPlaceholder(
+                                                                  height: 110.h,
+                                                                  width: 110.h,
+                                                                  radius: 200.r,
+                                                                ),
                                                         height: 110.h,
                                                         width: 110.h,
-                                                        radius: 200.r,
+                                                        fit: BoxFit.cover,
                                                       ),
-                                                  height: 110.h,
-                                                  width: 110.h,
-                                                  fit: BoxFit.cover,
-                                                ),
                                               ),
                                             ),
                                           ),
@@ -504,7 +556,7 @@ class _ProfileCustomAppBarState extends State<ProfileCustomAppBar> {
                                 GestureDetector(
                                   onTap: () => showProfilePreview(
                                     context: context,
-                                    imageUrl: currentUserModel.profilePicture!,
+                                    imageUrl: currentUserModel.profilePicture,
                                   ),
                                   child: Hero(
                                     tag: currentUserModel.profilePicture!,
@@ -526,20 +578,34 @@ class _ProfileCustomAppBarState extends State<ProfileCustomAppBar> {
                                             borderRadius: BorderRadius.circular(
                                               200.r,
                                             ),
-                                            child: CachedNetworkImage(
-                                              imageUrl: currentUserModel
-                                                  .profilePicture!,
-                                              progressIndicatorBuilder:
-                                                  (context, url, progress) =>
-                                                      shimmerPlaceholder(
-                                                        height: 110.h,
-                                                        width: 110.h,
-                                                        radius: 200.r,
-                                                      ),
-                                              height: 110.h,
-                                              width: 110.h,
-                                              fit: BoxFit.cover,
-                                            ),
+                                            child:
+                                                currentUserModel
+                                                            .profilePicture ==
+                                                        null ||
+                                                    currentUserModel
+                                                        .profilePicture!
+                                                        .isEmpty
+                                                ? Icon(
+                                                    IconlyBold.profile,
+                                                    size: 55,
+                                                  )
+                                                : CachedNetworkImage(
+                                                    imageUrl: currentUserModel
+                                                        .profilePicture!,
+                                                    progressIndicatorBuilder:
+                                                        (
+                                                          context,
+                                                          url,
+                                                          progress,
+                                                        ) => shimmerPlaceholder(
+                                                          height: 110.h,
+                                                          width: 110.h,
+                                                          radius: 200.r,
+                                                        ),
+                                                    height: 110.h,
+                                                    width: 110.h,
+                                                    fit: BoxFit.cover,
+                                                  ),
                                           ),
                                         ),
                                       ),

@@ -122,7 +122,7 @@ class _ProductDetailsAppBarState extends State<ProductDetailsAppBar>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
-        height: offset >= 300.h ? 100.h : 0,
+        height: offset >= 300.h ? 130 : 0,
         color: scaffoldColor,
       ),
     );

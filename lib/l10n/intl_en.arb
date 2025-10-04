@@ -643,5 +643,19 @@
   "yearly": "Yearly",
 
   "place_order": "Place order",
-  "see_it_now": "See it now"
+  "see_it_now": "See it now",
+
+  "enter_address_name": "Enter address name",
+  "location_already_saved": "Location already saved",
+  "select_this_location": "Select this location",
+
+  "second": "{count, plural, one {second} other {seconds}}",
+  "minute": "{count, plural, one {minute} other {minutes}}",
+  "hour": "{count, plural, one {hour} other {hours}}",
+  "day": "{count, plural, one {day} other {days}}",
+  "week": "{count, plural, one {week} other {weeks}}",
+  "month": "{count, plural, one {month} other {months}}",
+
+  "no_fav_shops": "No favorite shops",
+  "no_fav_products": "No favorite products"
 }

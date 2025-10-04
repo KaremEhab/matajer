@@ -307,51 +307,49 @@ class _SignUpState extends State<SignUp> {
                                 spacing: 10,
                                 children: [
                                   // SizedBox(height: 13.h),
-                                  if (!widget.socialInfo!)
-                                    CustomFormField(
-                                      onSubmit: (val) async {
-                                        if (val!.isEmpty) {
-                                          setState(() {
-                                            usernameStatus =
-                                                UsernameStatus.notAvailable;
-                                          });
-                                          return;
-                                        }
+                                  CustomFormField(
+                                    onSubmit: (val) async {
+                                      if (val!.isEmpty) {
                                         setState(() {
-                                          usernameStatus ==
-                                              UsernameStatus.loading;
+                                          usernameStatus =
+                                              UsernameStatus.notAvailable;
                                         });
-                                      },
-                                      suffix:
-                                          usernameStatus ==
-                                              UsernameStatus.loading
-                                          ? const CupertinoActivityIndicator(
-                                              color: primaryColor,
-                                            )
-                                          : Icon(
-                                              usernameStatus ==
-                                                      UsernameStatus.initial
-                                                  ? null
-                                                  : usernameStatus ==
-                                                        UsernameStatus.available
-                                                  ? Icons.check_circle
-                                                  : Icons.cancel,
-                                              color:
-                                                  usernameStatus ==
+                                        return;
+                                      }
+                                      setState(() {
+                                        usernameStatus ==
+                                            UsernameStatus.loading;
+                                      });
+                                    },
+                                    suffix:
+                                        usernameStatus == UsernameStatus.loading
+                                        ? const CupertinoActivityIndicator(
+                                            color: primaryColor,
+                                          )
+                                        : Icon(
+                                            usernameStatus ==
+                                                    UsernameStatus.initial
+                                                ? null
+                                                : usernameStatus ==
                                                       UsernameStatus.available
-                                                  ? CupertinoColors.systemGreen
-                                                  : CupertinoColors.systemRed,
-                                            ),
-                                      hint: S.of(context).username,
-                                      maxLines: 1,
-                                      onChanged: (val) {
-                                        resetTimer(val.toString());
-                                      },
-                                      onTap: () {},
-                                      controller: usernameController,
-                                      validator: (username) =>
-                                          validateUsername(context, username),
-                                    ),
+                                                ? Icons.check_circle
+                                                : Icons.cancel,
+                                            color:
+                                                usernameStatus ==
+                                                    UsernameStatus.available
+                                                ? CupertinoColors.systemGreen
+                                                : CupertinoColors.systemRed,
+                                          ),
+                                    hint: S.of(context).username,
+                                    maxLines: 1,
+                                    onChanged: (val) {
+                                      resetTimer(val.toString());
+                                    },
+                                    onTap: () {},
+                                    controller: usernameController,
+                                    validator: (username) =>
+                                        validateUsername(context, username),
+                                  ),
                                   // SizedBox(height: 13.h),
                                   DropdownButtonFormField<String>(
                                     decoration: InputDecoration(
@@ -589,7 +587,7 @@ class _SignUpState extends State<SignUp> {
                                                   .instance
                                                   .currentUser;
 
-                                              // Link email/password to the current (Google) user
+                                              // Link email/password to current user
                                               final credential =
                                                   EmailAuthProvider.credential(
                                                     email: email,
@@ -599,7 +597,30 @@ class _SignUpState extends State<SignUp> {
                                               await user!.linkWithCredential(
                                                 credential,
                                               );
-                                            } catch (e) {
+
+                                              // Continue with user creation
+                                              RegisterCubit.get(
+                                                context,
+                                              ).userCreate(
+                                                userId: widget.uId!,
+                                                username: widget.username!,
+                                                email: email,
+                                                phoneNumber:
+                                                    widget.phoneNumber ?? "",
+                                                phoneVerified:
+                                                    widget.phoneNumber != null,
+                                                imageUrl:
+                                                    widget.profilePic ?? "",
+                                                emirate:
+                                                    emiratesMap[selectedEmirate],
+                                                gender: selectedGender,
+                                                age: selectedAge,
+                                                birthdate: selectedBirthdate,
+                                              );
+                                            } catch (e, stackTrace) {
+                                              log('Apple SignUp Error: $e');
+                                              log('Stack Trace:\n$stackTrace');
+
                                               ScaffoldMessenger.of(
                                                 context,
                                               ).showSnackBar(
@@ -620,7 +641,8 @@ class _SignUpState extends State<SignUp> {
                                               context,
                                             ).userCreate(
                                               userId: widget.uId!,
-                                              username: widget.username!,
+                                              username: usernameController.text
+                                                  .trim(),
                                               email: email,
                                               phoneNumber:
                                                   widget.phoneNumber ?? "",
@@ -628,7 +650,7 @@ class _SignUpState extends State<SignUp> {
                                                   widget.phoneNumber == null
                                                   ? false
                                                   : true,
-                                              imageUrl: widget.profilePic!,
+                                              imageUrl: widget.profilePic ?? "",
                                               emirate:
                                                   emiratesMap[selectedEmirate],
                                               gender: selectedGender,
@@ -809,66 +831,68 @@ class _SignUpState extends State<SignUp> {
                                     ),
 
                                   // google Icon
-                                  Expanded(
-                                    child: Center(
-                                      child: Material(
-                                        color: transparentColor,
-                                        borderRadius: BorderRadius.circular(
-                                          20.r,
-                                        ),
-                                        child: InkWell(
+                                  if (!Platform.isIOS)
+                                    Expanded(
+                                      child: Center(
+                                        child: Material(
+                                          color: transparentColor,
                                           borderRadius: BorderRadius.circular(
                                             20.r,
                                           ),
-                                          onTap: !isInitialInternetAvailable
-                                              ? () {
-                                                  snack(context);
-                                                }
-                                              : () {
-                                                  RegisterCubit.get(
-                                                    context,
-                                                  ).googleSignUp(context);
-                                                },
-                                          child: Container(
-                                            padding: EdgeInsets.symmetric(
-                                              vertical: 20,
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(
+                                              20.r,
                                             ),
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              border: Border.all(
-                                                color: greyColor.withOpacity(
-                                                  0.3,
-                                                ),
-                                                strokeAlign: BorderSide
-                                                    .strokeAlignOutside,
+                                            onTap: !isInitialInternetAvailable
+                                                ? () {
+                                                    snack(context);
+                                                  }
+                                                : () {
+                                                    RegisterCubit.get(
+                                                      context,
+                                                    ).googleSignUp(context);
+                                                  },
+                                            child: Container(
+                                              padding: EdgeInsets.symmetric(
+                                                vertical: 20,
                                               ),
-                                            ),
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                SvgPicture.asset(
-                                                  'images/google-icon.svg',
-                                                  width: 25,
-                                                ),
-                                                SizedBox(width: 12),
-                                                Text(
-                                                  S.of(context).google,
-                                                  style: TextStyle(
-                                                    height: 1.1,
-                                                    color: textColor,
-                                                    fontSize: 15,
-                                                    fontWeight: FontWeight.w700,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: greyColor.withOpacity(
+                                                    0.3,
                                                   ),
+                                                  strokeAlign: BorderSide
+                                                      .strokeAlignOutside,
                                                 ),
-                                              ],
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  SvgPicture.asset(
+                                                    'images/google-icon.svg',
+                                                    width: 25,
+                                                  ),
+                                                  SizedBox(width: 12),
+                                                  Text(
+                                                    S.of(context).google,
+                                                    style: TextStyle(
+                                                      height: 1.1,
+                                                      color: textColor,
+                                                      fontSize: 15,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
 
                                   // facebook Icon
                                   Expanded(

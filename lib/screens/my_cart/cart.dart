@@ -442,39 +442,32 @@ class _CartState extends State<Cart> with TickerProviderStateMixin {
                                                                 ),
                                                             onLongPress: () {
                                                               setState(() {
-                                                                if (isSelected) {
-                                                                  selectedProductIds
-                                                                      .remove(
-                                                                        product
-                                                                            .id,
-                                                                      );
-                                                                } else {
-                                                                  selectedProductIds
-                                                                      .add(
-                                                                        product
-                                                                            .id,
-                                                                      );
-                                                                }
+                                                                selectedProductIds
+                                                                    .add(
+                                                                      product
+                                                                          .id,
+                                                                    );
                                                               });
                                                             },
                                                             onTap: () {
                                                               setState(() {
                                                                 if (selectedProductIds
                                                                     .isNotEmpty) {
+                                                                  // Selection mode is ON: Toggle selection
                                                                   if (isSelected) {
                                                                     selectedProductIds
                                                                         .remove(
                                                                           product
                                                                               .id,
-                                                                        );
+                                                                        ); // Click again to remove
                                                                   } else {
-                                                                    selectedProductIds
-                                                                        .add(
-                                                                          product
-                                                                              .id,
-                                                                        );
+                                                                    selectedProductIds.add(
+                                                                      product
+                                                                          .id,
+                                                                    ); // Click to select
                                                                   }
                                                                 } else {
+                                                                  // Selection mode is OFF: Navigate
                                                                   slideAnimation(
                                                                     context:
                                                                         context,
@@ -837,25 +830,64 @@ class _CartState extends State<Cart> with TickerProviderStateMixin {
                                                       ),
                                                       if (isSelected)
                                                         Positioned.fill(
-                                                          child: Container(
-                                                            decoration: BoxDecoration(
-                                                              color: Colors
-                                                                  .black
-                                                                  .withOpacity(
-                                                                    0.3,
-                                                                  ),
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    20,
-                                                                  ),
-                                                            ),
-                                                            child: Center(
-                                                              child: Icon(
-                                                                Icons
-                                                                    .check_circle,
+                                                          child: InkWell(
+                                                            onTap: () {
+                                                              setState(() {
+                                                                if (selectedProductIds
+                                                                    .isNotEmpty) {
+                                                                  // Selection mode is ON: Toggle selection
+                                                                  if (isSelected) {
+                                                                    selectedProductIds
+                                                                        .remove(
+                                                                          product
+                                                                              .id,
+                                                                        ); // Click again to remove
+                                                                  } else {
+                                                                    selectedProductIds.add(
+                                                                      product
+                                                                          .id,
+                                                                    ); // Click to select
+                                                                  }
+                                                                } else {
+                                                                  // Selection mode is OFF: Navigate
+                                                                  slideAnimation(
+                                                                    context:
+                                                                        context,
+                                                                    destination: ProductDetailsScreen(
+                                                                      cart:
+                                                                          true,
+                                                                      orderedQuantity:
+                                                                          quantity,
+                                                                      productModel: ProductCubit.get(
+                                                                        context,
+                                                                      ).cartProducts[index].product,
+                                                                    ),
+                                                                    rightSlide:
+                                                                        true,
+                                                                  );
+                                                                }
+                                                              });
+                                                            },
+                                                            child: Container(
+                                                              decoration: BoxDecoration(
                                                                 color: Colors
-                                                                    .white,
-                                                                size: 48,
+                                                                    .black
+                                                                    .withOpacity(
+                                                                      0.3,
+                                                                    ),
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      20,
+                                                                    ),
+                                                              ),
+                                                              child: Center(
+                                                                child: Icon(
+                                                                  Icons
+                                                                      .check_circle,
+                                                                  color: Colors
+                                                                      .white,
+                                                                  size: 48,
+                                                                ),
                                                               ),
                                                             ),
                                                           ),

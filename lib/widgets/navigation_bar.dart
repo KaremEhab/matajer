@@ -370,28 +370,42 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
                             ),
                             child: CircleAvatar(
                               radius: widget.currentIndex == index ? 14 : 12,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(200.r),
-                                child: CachedNetworkImage(
-                                  imageUrl: currentUserModel.profilePicture!,
-                                  progressIndicatorBuilder:
-                                      (context, url, progress) =>
-                                          shimmerPlaceholder(
-                                            height: widget.currentIndex == index
-                                                ? 14
-                                                : 12,
-                                            width: widget.currentIndex == index
-                                                ? 14
-                                                : 12,
-                                            radius: 200.r,
-                                          ),
-                                  height: widget.currentIndex == index
-                                      ? 29
-                                      : 27,
-                                  width: widget.currentIndex == index ? 29 : 27,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
+                              child:
+                                  currentUserModel.profilePicture == null ||
+                                      currentUserModel.profilePicture!.isEmpty
+                                  ? Icon(IconlyBold.profile, size: 15)
+                                  : ClipRRect(
+                                      borderRadius: BorderRadius.circular(
+                                        200.r,
+                                      ),
+                                      child: CachedNetworkImage(
+                                        imageUrl:
+                                            currentUserModel.profilePicture!,
+                                        progressIndicatorBuilder:
+                                            (
+                                              context,
+                                              url,
+                                              progress,
+                                            ) => shimmerPlaceholder(
+                                              height:
+                                                  widget.currentIndex == index
+                                                  ? 14
+                                                  : 12,
+                                              width:
+                                                  widget.currentIndex == index
+                                                  ? 14
+                                                  : 12,
+                                              radius: 200.r,
+                                            ),
+                                        height: widget.currentIndex == index
+                                            ? 29
+                                            : 27,
+                                        width: widget.currentIndex == index
+                                            ? 29
+                                            : 27,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
                             ),
                           ),
                         ),

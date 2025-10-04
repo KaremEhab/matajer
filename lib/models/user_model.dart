@@ -20,12 +20,12 @@ class UserModel {
   late bool reviewsNotification;
   late bool ordersNotification;
   late bool messagesNotification;
-  late Timestamp accountCreatedAt;
+  late DateTime accountCreatedAt;
 
   List<Map<String, dynamic>> shops = []; // Existing shops
   List<String> shopsVisibleToComment = []; // ✅ New field
-  List<String> addresses = [];
-  String currentAddress = '';
+  List<Map<String, dynamic>> addresses = []; // ✅ address with name + value
+  Map<String, dynamic>? currentAddress; // ✅ changed from String to Map
 
   late DateTime birthdate;
   late Gender gender;
@@ -53,6 +53,7 @@ class UserModel {
     required this.ordersNotification,
     required this.messagesNotification,
     this.profilePicture,
+    this.currentAddress,
   });
 
   UserModel.fromJson(Map<String, dynamic> json) {
@@ -69,20 +70,25 @@ class UserModel {
     ordersNotification = json['ordersNotification'] ?? false;
     messagesNotification = json['messagesNotification'] ?? false;
 
-    if (json['accountCreatedAt'] is String) {
-      accountCreatedAt = Timestamp.fromDate(
-        DateTime.parse(json['accountCreatedAt']),
-      );
+    // ✅ Handle Timestamp or String
+    if (json['accountCreatedAt'] != null) {
+      if (json['accountCreatedAt'] is Timestamp) {
+        accountCreatedAt = (json['accountCreatedAt'] as Timestamp).toDate();
+      } else if (json['accountCreatedAt'] is String) {
+        accountCreatedAt = DateTime.parse(json['accountCreatedAt']);
+      }
     } else {
-      accountCreatedAt = json['accountCreatedAt'];
+      accountCreatedAt = DateTime.now();
     }
 
     if (json['birthdate'] != null) {
-      if (json['birthdate'] is String) {
-        birthdate = DateTime.parse(json['birthdate']);
-      } else if (json['birthdate'] is Timestamp) {
+      if (json['birthdate'] is Timestamp) {
         birthdate = (json['birthdate'] as Timestamp).toDate();
+      } else if (json['birthdate'] is String) {
+        birthdate = DateTime.parse(json['birthdate']);
       }
+    } else {
+      birthdate = DateTime.now();
     }
 
     gender = json['gender'] == 'male' ? Gender.male : Gender.female;
@@ -99,8 +105,16 @@ class UserModel {
       shopsVisibleToComment = List<String>.from(json['shopsVisibleToComment']);
     }
 
-    addresses = List<String>.from(json['addresses'] ?? []);
-    currentAddress = json['currentAddress'] ?? '';
+    if (json['addresses'] != null && json['addresses'] is List) {
+      addresses = List<Map<String, dynamic>>.from(json['addresses']);
+    }
+
+    if (json['currentAddress'] != null && json['currentAddress'] is Map) {
+      currentAddress = Map<String, dynamic>.from(json['currentAddress']);
+    } else {
+      currentAddress = null;
+    }
+
     activityStatus = json['activityStatus'] == 'online'
         ? UserActivityStatus.online
         : UserActivityStatus.offline;
@@ -120,16 +134,18 @@ class UserModel {
       'reviewsNotification': reviewsNotification,
       'ordersNotification': ordersNotification,
       'messagesNotification': messagesNotification,
-      'accountCreatedAt': accountCreatedAt,
-      'birthdate': birthdate,
+      'accountCreatedAt': accountCreatedAt.toIso8601String(),
+      'birthdate': birthdate.toIso8601String(),
       'gender': gender.name,
       'age': age,
       'emirate': emirate,
       'profilePicture': profilePicture,
       'shops': shops.map((e) => Map<String, dynamic>.from(e)).toList(),
       'shopsVisibleToComment': shopsVisibleToComment,
-      'addresses': addresses,
-      'currentAddress': currentAddress,
+      'addresses': addresses.map((e) => Map<String, dynamic>.from(e)).toList(),
+      'currentAddress': currentAddress != null
+          ? Map<String, dynamic>.from(currentAddress!)
+          : null,
       'activityStatus': activityStatus.name,
     };
   }

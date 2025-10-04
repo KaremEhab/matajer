@@ -222,8 +222,13 @@ class _ChatsPageState extends State<ChatsPage> {
                               );
                             }
 
+                            final docSnapshot = snapshot.data;
+                            if (docSnapshot == null || !docSnapshot.exists) {
+                              return SizedBox.shrink();
+                            }
+
                             final data =
-                                snapshot.data!.data() as Map<String, dynamic>;
+                                docSnapshot.data() as Map<String, dynamic>;
 
                             final receiverName = isCustomer
                                 ? data['shopName']

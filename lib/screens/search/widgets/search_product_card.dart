@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconly/iconly.dart';
 import 'package:matajer/constants/colors.dart';
 import 'package:matajer/constants/functions.dart';
 import 'package:matajer/constants/vars.dart';
@@ -81,12 +82,20 @@ class _SearchProductCardState extends State<SearchProductCard>
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(13),
-                          child: CachedNetworkImage(
-                            imageUrl: widget.product.images.first,
-                            height: 120,
-                            width: 120,
-                            fit: BoxFit.cover,
-                          ),
+                          child: widget.product.images.isEmpty
+                              ? SizedBox(
+                                  height: 120,
+                                  width: 120,
+                                  child: Center(
+                                    child: Icon(IconlyLight.image, size: 55),
+                                  ),
+                                )
+                              : CachedNetworkImage(
+                                  imageUrl: widget.product.images.first,
+                                  height: 120,
+                                  width: 120,
+                                  fit: BoxFit.cover,
+                                ),
                         ),
                       ),
                       Expanded(

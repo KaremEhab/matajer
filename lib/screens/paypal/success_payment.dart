@@ -243,7 +243,7 @@ class OrderActions extends StatelessWidget {
             onPressed: () {
               navigateTo(
                 context: context,
-                screen: OrderDetails(order: order),
+                screen: OrderDetails(order: order, goBack: false),
               );
             },
             child: Text(

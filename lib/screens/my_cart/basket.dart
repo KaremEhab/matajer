@@ -1,9 +1,11 @@
+import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:iconly/iconly.dart';
 import 'package:matajer/constants/colors.dart';
 import 'package:matajer/constants/functions.dart';
 import 'package:matajer/constants/vars.dart';
@@ -37,8 +39,10 @@ class _BasketState extends State<Basket> {
   final GlobalKey<HomeState> homeKey = GlobalKey<HomeState>();
   final ScrollController _scrollController = ScrollController();
   final PageController _pageController = PageController();
-  late ShopModel? shop;
+
   bool isPaymentExpanded = false;
+
+  late ShopModel shopModel;
 
   int _currentIndex = 0;
 
@@ -47,9 +51,16 @@ class _BasketState extends State<Basket> {
   num total = 0;
   num appCommission = 0;
 
+  final userEmirate = currentUserModel.emirate;
+
+  num deliveryDays = 0;
+  num deliveryPrice = 0;
+
   @override
   void initState() {
     super.initState();
+
+    getShopData();
 
     _scrollController.addListener(() {
       final width =
@@ -70,6 +81,26 @@ class _BasketState extends State<Basket> {
 
     // 🟢 Immediately fetch shop info
     userCubit.getShopInfoById(widget.shopId);
+  }
+
+  Future<void> getShopData() async {
+    shopModel = (await ProductCubit.get(
+      context,
+    ).getShop(sellerId: widget.shopId))!;
+
+    // قائمة الـ options
+    final options = shopModel.deliveryOptions ?? [];
+
+    // نحاول نلاقي الإمارة بتاعت المستخدم
+    final selectedOption = options.cast<Map<String, dynamic>?>().firstWhere(
+      (opt) => opt?['emirate'] == userEmirate,
+      orElse: () => null,
+    );
+
+    deliveryDays = selectedOption?['days'] ?? 0;
+    deliveryPrice = selectedOption?['price'] ?? 0;
+
+    payPrice = [0, deliveryPrice, 10, 0];
   }
 
   @override
@@ -98,8 +129,9 @@ class _BasketState extends State<Basket> {
             screen: SuccessPayment(
               orderId: randomOrderId,
               shopId: widget.shopId,
-              deliveryTime: shop!.deliveryDays,
-              price: total.toDouble(),
+              deliveryTime: deliveryDays,
+              price:
+                  total.toDouble() + deliveryPrice, // لو عايز تضيف سعر التوصيل
             ),
           );
         }
@@ -118,12 +150,18 @@ class _BasketState extends State<Basket> {
         ];
         total = 0;
         payPrice[0] = ProductCubit.get(context).totalCartPrice;
+
         for (int i = 0; i < payPrice.length - 2; i++) {
           total += payPrice[i];
         }
-        payPrice[2] = total * appCommission / 100;
-        payPrice[3] = total * 5 / 100;
-        total += payPrice[3] + payPrice[2];
+
+        // عمولة المتجر
+        payPrice[2] = (payPrice[0] * appCommission) / 100;
+
+        // رسوم الدفع
+        payPrice[3] = payPrice[0] * 5 / 100;
+
+        total += payPrice[2] + payPrice[3];
         return Scaffold(
           extendBody: true,
           appBar: AppBar(
@@ -165,17 +203,13 @@ class _BasketState extends State<Basket> {
                     borderRadius: BorderRadius.circular(12.r),
                     onTap: () async {
                       if (cartShopId != null) {
-                        ShopModel? seller = await ProductCubit.get(
-                          context,
-                        ).getShop(sellerId: cartShopId!);
-
-                        chatReceiverName = seller!.shopName;
-                        chatReceiverImage = seller.shopLogoUrl;
+                        chatReceiverName = shopModel.shopName;
+                        chatReceiverImage = shopModel.shopLogoUrl;
 
                         if (!context.mounted) return;
                         slideAnimation(
                           context: context,
-                          destination: ShopScreen(shopModel: seller),
+                          destination: ShopScreen(shopModel: shopModel),
                         );
                       } else {
                         setState(() {
@@ -286,19 +320,33 @@ class _BasketState extends State<Basket> {
                                     flex: 3,
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(10.r),
-                                      child: CachedNetworkImage(
-                                        imageUrl: product.product.images.first,
-                                        width: double.infinity,
-                                        height: double.infinity,
-                                        fit: BoxFit.cover,
-                                        placeholder: (context, url) =>
-                                            const Center(
-                                              child:
-                                                  CircularProgressIndicator(),
+                                      child: product.product.images.isEmpty
+                                          ? Material(
+                                              color: lightGreyColor.withOpacity(
+                                                0.4,
+                                              ),
+                                              child: Center(
+                                                child: Icon(
+                                                  IconlyLight.image,
+                                                  size: 50,
+                                                ),
+                                              ),
+                                            )
+                                          : CachedNetworkImage(
+                                              imageUrl:
+                                                  product.product.images.first,
+                                              width: double.infinity,
+                                              height: double.infinity,
+                                              fit: BoxFit.cover,
+                                              placeholder: (context, url) =>
+                                                  const Center(
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  ),
+                                              errorWidget:
+                                                  (context, url, error) =>
+                                                      const Icon(Icons.error),
                                             ),
-                                        errorWidget: (context, url, error) =>
-                                            const Icon(Icons.error),
-                                      ),
                                     ),
                                   ),
                                 ],
@@ -380,42 +428,45 @@ class _BasketState extends State<Basket> {
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(8),
                                   onTap: () async {
-                                    ShopModel? seller = await ProductCubit.get(
-                                      context,
-                                    ).getShop(sellerId: widget.shopId);
-                                    chatReceiverName = seller!.shopName;
-                                    chatReceiverImage = seller.shopLogoUrl;
-                                    if (!context.mounted) return;
-
                                     final shopId = widget.shopId;
+                                    final shopName = shopModel.shopName;
+                                    final shopLogo = shopModel.shopLogoUrl;
                                     final userId = currentUserModel.uId;
                                     final chatId = '${userId}_$shopId';
 
-                                    await ChatsCubit.instance.createChatRoom(
+                                    final chatCubit = ChatsCubit.instance;
+                                    await chatCubit.createChatRoom(
                                       userId: userId,
-                                      // userName: currentUserModel.username,
-                                      // userImage: currentUserModel.profilePicture!,
                                       shopId: shopId,
-                                      // shopName: widget.shopModel.shopName,
-                                      // shopImage: widget.shopModel.shopLogoUrl,
                                     );
 
-                                    // log(
-                                    //   'chat between: ${currentUserModel.username} and ${widget.shopModel.shopName}',
-                                    // );
-                                    // log(
-                                    //   'chatId: $chatId, userId: $userId, shopId: $shopId, userName: ${currentUserModel.username}, userImage: ${currentUserModel.profilePicture}, shopName: ${widget.shopModel.shopName}, shopLogo: ${widget.shopModel.shopLogoUrl} ',
-                                    // );
+                                    if (!context.mounted) return;
 
+                                    // Navigate immediately 🚀
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => ChatDetailPage(
                                           chatId: chatId,
                                           receiverId: shopId,
-                                          receiverName: chatReceiverName,
-                                          receiverImage: chatReceiverImage,
+                                          clearSendMessage: true,
+                                          receiverName: shopName,
+                                          receiverImage: shopLogo,
                                         ),
+                                      ),
+                                    );
+
+                                    // Fire-and-forget message (don’t await)
+                                    unawaited(
+                                      chatCubit.sendProductMentionMessage(
+                                        chatId: chatId,
+                                        senderId: userId,
+                                        receiverId: shopId,
+                                        message: "",
+                                        product: ProductCubit.get(context)
+                                            .cartProducts[_pageController.page!
+                                                .toInt()]
+                                            .product,
                                       ),
                                     );
                                   },
@@ -460,36 +511,44 @@ class _BasketState extends State<Basket> {
                             spacing: 15,
                             children: [
                               Icon(Icons.local_shipping_outlined, size: 30),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    S.of(context).delivery_days,
-                                    style: TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w800,
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize
+                                      .min, // Keep column size minimal
+                                  children: [
+                                    Text(
+                                      S.of(context).delivery_days,
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w800,
+                                      ),
                                     ),
-                                  ),
-                                  BlocBuilder<UserCubit, UserState>(
-                                    buildWhen: (previous, current) =>
-                                        current is GetShopByIdSuccessState ||
-                                        current is UserInitialState,
-                                    builder: (context, state) {
-                                      shop = UserCubit.get(context).shopById;
-                                      if (shop != null) {
-                                        return Text(
-                                          "${S.of(context).arriving_in_approx} ${shop!.deliveryDays} ${S.of(context).days}",
-                                          style: const TextStyle(fontSize: 15),
-                                          overflow: TextOverflow.ellipsis,
-                                        );
-                                      } else {
-                                        return Text(
-                                          S.of(context).loading_delivery,
-                                        );
-                                      }
-                                    },
-                                  ),
-                                ],
+                                    BlocBuilder<UserCubit, UserState>(
+                                      buildWhen: (previous, current) =>
+                                          current is GetShopByIdSuccessState ||
+                                          current is UserInitialState,
+                                      builder: (context, state) {
+                                        if (deliveryDays != null &&
+                                            deliveryDays != 0 &&
+                                            deliveryPrice != null &&
+                                            deliveryPrice != 0) {
+                                          return Text(
+                                            "${S.of(context).arriving_in_approx} $deliveryDays ${S.of(context).days} - ${S.of(context).price}: $deliveryPrice AED",
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                            ),
+                                            maxLines: 2,
+                                          );
+                                        } else {
+                                          return Text(
+                                            S.of(context).loading_delivery,
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -674,43 +733,54 @@ class _BasketState extends State<Basket> {
                               color: primaryColor,
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(17.r),
-                                onTap: () async {
-                                  if (currentUserModel.currentAddress.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          S
-                                              .of(context)
-                                              .please_select_address_before_cont,
-                                        ),
-                                        behavior: SnackBarBehavior.floating,
-                                        backgroundColor: Colors.red,
-                                        duration: Duration(seconds: 2),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadiusGeometry.circular(15),
-                                        ),
-                                        action: SnackBarAction(
-                                          label: S.of(context).select,
-                                          textColor: Colors.white,
-                                          onPressed: () {
-                                            // Navigate to address selection screen
-                                            navigateTo(
-                                              context: context,
-                                              screen: SavedAddress(),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    );
-                                    return;
-                                  }
+                                onTap: state is ProductPaypalPayLoadingState
+                                    ? null
+                                    : () async {
+                                        if (currentUserModel.currentAddress ==
+                                                null ||
+                                            currentUserModel
+                                                .currentAddress!
+                                                .isEmpty) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                S
+                                                    .of(context)
+                                                    .please_select_address_before_cont,
+                                              ),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              backgroundColor: Colors.red,
+                                              duration: Duration(seconds: 2),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadiusGeometry.circular(
+                                                      15,
+                                                    ),
+                                              ),
+                                              action: SnackBarAction(
+                                                label: S.of(context).select,
+                                                textColor: Colors.white,
+                                                onPressed: () {
+                                                  // Navigate to address selection screen
+                                                  navigateTo(
+                                                    context: context,
+                                                    screen: SavedAddress(),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          );
+                                          return;
+                                        }
 
-                                  // ✅ Proceed if address is selected
-                                  await ProductCubit.get(
-                                    context,
-                                  ).paypal(val: total);
-                                },
+                                        // ✅ Proceed if address is selected
+                                        await ProductCubit.get(
+                                          context,
+                                        ).paypal(val: total);
+                                      },
                                 // onTap: () {
                                 //   slideAnimation(
                                 //     context: context,

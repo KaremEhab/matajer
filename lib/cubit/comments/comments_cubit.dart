@@ -37,8 +37,14 @@ class CommentsCubit extends Cubit<CommentsState> {
           .map((doc) => CommentsModel.fromJson(doc.data()))
           .toList();
 
+      // 🔹 Log the fetched comments
+      for (var c in comments) {
+        debugPrint("Fetched Comment => ${c.toMap()}");
+      }
+
       emit(CommentsSuccessState());
     } catch (e) {
+      debugPrint("❌ Error fetching comments: $e");
       emit(CommentsErrorState(error: e.toString()));
     }
   }

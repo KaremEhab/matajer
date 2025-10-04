@@ -16,6 +16,16 @@ class UserGetUserDataErrorState extends UserState {
   UserGetUserDataErrorState(this.error);
 }
 
+class UserUpdateFCMTokenLoadingState extends UserState {}
+
+class UserUpdateFCMTokenSuccessState extends UserState {}
+
+class UserUpdateFCMTokenErrorState extends UserState {
+  final String error;
+
+  UserUpdateFCMTokenErrorState(this.error);
+}
+
 class GetUserShopByIdLoadingState extends UserState {}
 
 class GetUserShopByIdSuccessState extends UserState {}

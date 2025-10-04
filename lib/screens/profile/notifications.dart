@@ -33,6 +33,9 @@ class Notifications extends StatefulWidget {
 }
 
 class _NotificationsState extends State<Notifications> {
+  // 🛑 NEW: Map to track deleted status for each product notification by ID
+  final Map<String, bool> _deletedProductStatus = {};
+
   @override
   void initState() {
     super.initState();
@@ -125,10 +128,16 @@ class _NotificationsState extends State<Notifications> {
   }
 
   Widget _buildNotificationTile(NotificationModel notification) {
+    // Get the deleted status for this notification ID. Default to false.
+    final bool isProductDeleted =
+        _deletedProductStatus[notification.id] ?? false;
+
     return Material(
       color: notification.isRead ? transparentColor : secondaryColor,
       child: InkWell(
-        onTap: () => _handleNotificationTap(notification),
+        onTap: isProductDeleted
+            ? null
+            : () => _handleNotificationTap(notification),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 7),
           margin: const EdgeInsets.symmetric(vertical: 13),
@@ -145,6 +154,15 @@ class _NotificationsState extends State<Notifications> {
               ),
               if (notification.notificationType == NotificationTypes.newProduct)
                 NotificationProductCard(
+                  notificationId: notification.id, // Pass notification ID
+                  onProductStatusChange: (isDeleted) {
+                    // Update the map and trigger a state rebuild only if status changes
+                    if (_deletedProductStatus[notification.id] != isDeleted) {
+                      setState(() {
+                        _deletedProductStatus[notification.id] = isDeleted;
+                      });
+                    }
+                  },
                   productId: notification.payload['productId'],
                 ),
 
@@ -158,11 +176,15 @@ class _NotificationsState extends State<Notifications> {
                       NotificationTypes type = notification.notificationType;
                       OrderModel? orderModel;
                       ProductModel? productModel;
+
+                      // Parse Order Model (if applicable)
                       if (notification.payload['orderModel'] != null) {
                         orderModel = _parseOrder(
                           notification.payload['orderModel'],
                         );
                       }
+
+                      // Parse Product Model (if applicable - needed for cart logic)
                       if (notification.payload['productModel'] != null) {
                         productModel = _parseProduct(
                           notification.payload['productModel'],
@@ -188,157 +210,176 @@ class _NotificationsState extends State<Notifications> {
                           spacing: 5,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Expanded(
-                              flex: 2,
-                              child: Material(
-                                borderRadius: BorderRadius.circular(10),
-                                color: primaryColor,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(17.r),
-                                  onTap: () async {
-                                    await ProductCubit.get(
-                                      context,
-                                    ).getCartProducts();
-                                    if (!context.mounted) return;
+                            // 🛑 CRITICAL FIX: Hide 'Place Order' if product is deleted
+                            if (!isProductDeleted)
+                              Expanded(
+                                flex: 2,
+                                child: Material(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: primaryColor,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(17.r),
+                                    onTap: () async {
+                                      await ProductCubit.get(
+                                        context,
+                                      ).getCartProducts();
+                                      if (!context.mounted) return;
 
-                                    bool proceed = true;
+                                      bool proceed = true;
 
-                                    // Check if cart has products from another shop
-                                    if (ProductCubit.get(
-                                          context,
-                                        ).cartProducts.isNotEmpty &&
-                                        ProductCubit.get(context)
-                                                .cartProducts
-                                                .first
-                                                .product
-                                                .shopId !=
-                                            productModel!.shopId) {
-                                      // Await dialog result
-                                      proceed =
-                                          await showDialog<bool>(
-                                            context: context,
-                                            builder: (context) => AlertDialog(
-                                              title: Text(
-                                                S.of(context).different_seller,
-                                              ),
-                                              content: Text(
-                                                S.of(context).clear_cart_prompt,
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
+                                      // Check if cart has products from another shop
+                                      if (ProductCubit.get(
+                                            context,
+                                          ).cartProducts.isNotEmpty &&
+                                          ProductCubit.get(context)
+                                                  .cartProducts
+                                                  .first
+                                                  .product
+                                                  .shopId !=
+                                              productModel!.shopId) {
+                                        // Await dialog result
+                                        proceed =
+                                            await showDialog<bool>(
+                                              context: context,
+                                              builder: (context) => AlertDialog(
+                                                title: Text(
+                                                  S
+                                                      .of(context)
+                                                      .different_seller,
+                                                ),
+                                                content: Text(
+                                                  S
+                                                      .of(context)
+                                                      .clear_cart_prompt,
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                          context,
+                                                          false,
+                                                        ),
+                                                    child: Text(
+                                                      S.of(context).cancel,
+                                                    ),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () async {
+                                                      await ProductCubit.get(
+                                                        context,
+                                                      ).clearCart();
+                                                      if (!context.mounted)
+                                                        return;
                                                       Navigator.pop(
                                                         context,
-                                                        false,
-                                                      ),
-                                                  child: Text(
-                                                    S.of(context).cancel,
+                                                        true,
+                                                      ); // return true = proceed
+                                                    },
+                                                    child: Text(
+                                                      S.of(context).clear_cart,
+                                                    ),
                                                   ),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () async {
-                                                    await ProductCubit.get(
-                                                      context,
-                                                    ).clearCart();
-                                                    if (!context.mounted)
-                                                      return;
-                                                    Navigator.pop(
-                                                      context,
-                                                      true,
-                                                    ); // return true = proceed
-                                                  },
-                                                  child: Text(
-                                                    S.of(context).clear_cart,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ) ??
-                                          false; // default false if dialog dismissed
-                                    }
-
-                                    if (!proceed) return;
-
-                                    // Helper method to get default selected specifications (first of each)
-                                    List<Map<String, String>>
-                                    _getDefaultSelectedSpecifications(
-                                      ProductModel productModel,
-                                    ) {
-                                      List<Map<String, String>> selectedSpecs =
-                                          [];
-
-                                      for (var spec
-                                          in productModel.specifications) {
-                                        if (spec.subTitles.isNotEmpty) {
-                                          selectedSpecs.add({
-                                            'title': spec.title,
-                                            'value': spec
-                                                .subTitles
-                                                .first
-                                                .title, // Always select the first subTitle
-                                          });
-                                        }
+                                                ],
+                                              ),
+                                            ) ??
+                                            false; // default false if dialog dismissed
                                       }
 
-                                      return selectedSpecs;
-                                    }
+                                      if (!proceed) return;
 
-                                    final cartProduct = CartProductItemModel(
-                                      product: productModel!,
-                                      quantity: 1,
-                                      selectedSpecifications:
-                                          _getDefaultSelectedSpecifications(
-                                            productModel,
-                                          ),
-                                    );
+                                      // Helper method to get default selected specifications (first of each)
+                                      List<Map<String, String>>
+                                      _getDefaultSelectedSpecifications(
+                                        ProductModel productModel,
+                                      ) {
+                                        List<Map<String, String>>
+                                        selectedSpecs = [];
 
-                                    // Add products to cart
-                                    await Future.wait([
-                                      ProductCubit.get(
-                                        context,
-                                      ).addProductToCart(product: cartProduct),
-                                    ]);
+                                        for (var spec
+                                            in productModel.specifications) {
+                                          if (spec.subTitles.isNotEmpty) {
+                                            selectedSpecs.add({
+                                              'title': spec.title,
+                                              'value': spec
+                                                  .subTitles
+                                                  .first
+                                                  .title, // Always select the first subTitle
+                                            });
+                                          }
+                                        }
 
-                                    if (!context.mounted) return;
+                                        return selectedSpecs;
+                                      }
 
-                                    // Show success snackbar
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          S.of(context).products_added_cart,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                          ),
+                                      final cartProduct = CartProductItemModel(
+                                        product: productModel!,
+                                        quantity: 1,
+                                        selectedSpecifications:
+                                            _getDefaultSelectedSpecifications(
+                                              productModel,
+                                            ),
+                                      );
+
+                                      // Add products to cart
+                                      await Future.wait([
+                                        ProductCubit.get(
+                                          context,
+                                        ).addProductToCart(
+                                          product: cartProduct,
                                         ),
-                                        backgroundColor: primaryColor,
-                                        duration: const Duration(seconds: 2),
-                                      ),
-                                    );
-                                  },
-                                  child: Center(
-                                    child: Text(
-                                      S.current.place_order,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
+                                      ]);
+
+                                      if (!context.mounted) return;
+
+                                      // Show success snackbar
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            S.of(context).products_added_cart,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          backgroundColor: primaryColor,
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
+                                    },
+                                    child: Center(
+                                      child: Text(
+                                        S.current.place_order,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
                             Expanded(
+                              // Only 'View Details' will show if the product is deleted
+                              // The logic here is simplified to show 'View Details' always
+                              // but in a real app, you might hide this too if the product is truly gone.
                               child: Material(
                                 borderRadius: BorderRadius.circular(10),
-                                color: primaryColor.withOpacity(0.2),
+                                color: isProductDeleted
+                                    ? Colors.grey.withOpacity(
+                                        0.2,
+                                      ) // Style change if button is alone
+                                    : primaryColor.withOpacity(0.2),
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(17.r),
                                   child: Center(
                                     child: Text(
                                       S.current.view_details,
                                       style: TextStyle(
-                                        color: primaryColor,
+                                        color: isProductDeleted
+                                            ? Colors.grey
+                                            : primaryColor,
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -351,7 +392,7 @@ class _NotificationsState extends State<Notifications> {
                         );
                       }
 
-                      return SizedBox.shrink();
+                      return const SizedBox.shrink();
                     },
                   ),
                 ),
@@ -362,7 +403,10 @@ class _NotificationsState extends State<Notifications> {
     );
   }
 
+  // ----------------- AVATAR HELPERS -----------------
+
   Widget _buildNotificationAvatar(NotificationModel notification) {
+    // ... (unchanged) ...
     final type = notification.notificationType;
 
     if (type == NotificationTypes.newOrder ||
@@ -409,6 +453,7 @@ class _NotificationsState extends State<Notifications> {
   }
 
   Widget _buildNotificationContent(NotificationModel notification) {
+    // ... (unchanged) ...
     final actionText =
         (notification.notificationType == NotificationTypes.newOrder)
         ? S.current.see_it_now
@@ -461,7 +506,7 @@ class _NotificationsState extends State<Notifications> {
     );
   }
 
-  // ----------------- AVATAR HELPERS -----------------
+  // ----------------- AVATAR HELPERS (unchanged) -----------------
 
   Widget _buildCircleImageAvatar(String imageUrl) {
     return Container(
@@ -479,6 +524,18 @@ class _NotificationsState extends State<Notifications> {
         child: CircleAvatar(
           radius: 30,
           backgroundImage: CachedNetworkImageProvider(imageUrl),
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.cover,
+            progressIndicatorBuilder: (context, url, progress) =>
+                shimmerPlaceholder(
+                  width: double.infinity,
+                  height: 255,
+                  radius: 200,
+                ),
+            errorWidget: (context, url, error) =>
+                Center(child: Icon(IconlyBroken.profile, color: Colors.red)),
+          ),
         ),
       ),
     );
@@ -503,7 +560,7 @@ class _NotificationsState extends State<Notifications> {
     );
   }
 
-  // ----------------- HANDLERS -----------------
+  // ----------------- HANDLERS (unchanged) -----------------
 
   Future<void> _handleNotificationTap(NotificationModel notification) async {
     try {
@@ -576,7 +633,7 @@ class _NotificationsState extends State<Notifications> {
     setState(() {});
   }
 
-  // ----------------- PARSERS -----------------
+  // ----------------- PARSERS (unchanged) -----------------
 
   OrderModel _parseOrder(dynamic raw) {
     final map = _ensureMap(raw);
@@ -596,9 +653,24 @@ class _NotificationsState extends State<Notifications> {
   }
 }
 
+// ----------------------------------------------------------------------------------
+// 🛑 UPDATED NotificationProductCard to use a callback for status
+// ----------------------------------------------------------------------------------
+
 class NotificationProductCard extends StatefulWidget {
   final String productId;
-  const NotificationProductCard({super.key, required this.productId});
+  final String notificationId; // New: to help with tracking in parent
+  // 🛑 NEW: Callback function to communicate status back to the parent
+  final void Function(bool isDeleted) onProductStatusChange;
+
+  const NotificationProductCard({
+    super.key,
+    required this.productId,
+    required this.notificationId,
+    required this.onProductStatusChange,
+    // The original `productDeleted` is no longer needed but was included in the prompt.
+    // I've removed it from the final card signature for cleanliness.
+  });
 
   @override
   State<NotificationProductCard> createState() =>
@@ -631,6 +703,11 @@ class _NotificationProductCardState extends State<NotificationProductCard> {
         }
 
         if (!snapshot.hasData || snapshot.data == null) {
+          // 🛑 CRITICAL FIX: Product is deleted, call the callback!
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            widget.onProductStatusChange(true);
+          });
+
           return Center(
             child: Chip(
               side: BorderSide.none,
@@ -646,6 +723,11 @@ class _NotificationProductCardState extends State<NotificationProductCard> {
             ),
           );
         }
+
+        // 🛑 CRITICAL FIX: Product exists, ensure the status is false
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          widget.onProductStatusChange(false);
+        });
 
         final product = snapshot.data!;
         final images = product.images;

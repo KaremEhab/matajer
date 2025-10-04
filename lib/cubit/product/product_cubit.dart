@@ -1555,7 +1555,8 @@ class ProductCubit extends Cubit<ProductState> {
   }) async {
     emit(ProductPlaceOrderLoadingState());
     try {
-      final currentAddress = currentUserModel.currentAddress;
+      final currentAddress = currentUserModel.currentAddress!['address'];
+      log("📦 Starting placeOrder for shopId=$shopId, docId=$docId");
 
       final order = await compute(buildOrder, {
         "id": docId,
@@ -1574,26 +1575,40 @@ class ProductCubit extends Cubit<ProductState> {
         "createdAt": Timestamp.now(),
       });
 
+      log("✅ Order built: ${order.toMap()}");
+
       await FirebaseFirestore.instance.collection('users').doc(uId).set({
         'shopsVisibleToComment': FieldValue.arrayUnion([shopId]),
       }, SetOptions(merge: true));
+      log("✅ Added shop to shopsVisibleToComment");
 
       await FirebaseFirestore.instance
           .collection('orders')
           .doc(docId)
           .set(order.toMap(), SetOptions(merge: true));
+      log("✅ Order saved in Firestore with ID=$docId");
 
-      // Notifications (keep on main isolate, network-bound anyway)
+      // --- Notifications ---
+      final sendPayload = jsonEncode({
+        'type': NotificationTypes.newOrder.name,
+        'orderModel': order.toMap(),
+      });
+      log("📨 Sending notification payload: $sendPayload");
+
       await NotificationCubit.instance.sendNotification(
         title: currentUserModel.username,
         body: lang == 'en' ? "New order" : "طلب جديد",
         userId: shopId,
         notificationType: NotificationTypes.newOrder,
-        payload: jsonEncode({
-          'type': NotificationTypes.newOrder.name,
-          'orderModel': order.toMap(),
-        }),
+        payload: sendPayload, // String
       );
+      log("✅ Push notification sent");
+
+      final createPayload = {
+        'senderProfile': currentUserModel.profilePicture,
+        'orderModel': order.toMap(),
+      };
+      log("📝 Creating notification in Firestore: $createPayload");
 
       await NotificationCubit.instance.createNotification(
         receiverId: shopId,
@@ -1602,31 +1617,40 @@ class ProductCubit extends Cubit<ProductState> {
         body:
             "${currentUserModel.username} has just ordered a new product from you",
         type: NotificationTypes.newOrder,
-        payload: {
-          'senderProfile': currentUserModel.profilePicture,
-          'orderModel': order.toMap(),
-        },
+        payload: createPayload, // Map
       );
+      log("✅ Firestore notification created");
 
       await clearCart();
+      log("🛒 Cart cleared");
+
       emit(ProductPlaceOrderSuccessState());
       await OrderCubit.get(context).getOrderById(order.id);
-    } catch (e) {
-      log(e.toString());
+      log("✅ Order flow finished successfully");
+    } catch (e, st) {
+      log("❌ Error in placeOrder: $e");
+      log("StackTrace: $st");
       emit(ProductPlaceOrderErrorState(e.toString()));
     }
   }
 
-  Future<void> addNewAddress({required String address}) async {
+  Future<void> addNewAddress({
+    required String name,
+    required String address,
+  }) async {
     emit(ProductSaveAddressLoadingState());
     try {
       final userDoc = FirebaseFirestore.instance.collection('users').doc(uId);
+
+      final newAddress = {'name': name, 'address': address};
+
       await userDoc.set({
-        'addresses': FieldValue.arrayUnion([address]),
+        'addresses': FieldValue.arrayUnion([newAddress]),
       }, SetOptions(merge: true));
-      // Also update local model
-      currentUserModel.addresses.add(address);
-      // await refreshUserModel(); // new function
+
+      // Update local model
+      currentUserModel.addresses.add(newAddress);
+
       emit(ProductSaveAddressSuccessState());
     } catch (e) {
       log(e.toString());
@@ -1636,26 +1660,28 @@ class ProductCubit extends Cubit<ProductState> {
 
   Future<void> changeSpecificAddress({
     required int index,
-    required String newAddress,
+    required Map<String, dynamic> addressObj,
   }) async {
     emit(ProductSaveAddressLoadingState());
     try {
       final userDoc = FirebaseFirestore.instance.collection('users').doc(uId);
 
-      // Remove the old address and add the new one
-      String oldAddress = currentUserModel.addresses[index];
-      currentUserModel.addresses[index] = newAddress;
+      final oldAddress = currentUserModel.addresses[index];
+
+      // Replace with updated map
+      final updatedAddress = addressObj;
+      currentUserModel.addresses[index] = updatedAddress;
 
       await userDoc.update({'addresses': currentUserModel.addresses});
 
-      // If this address was the current one, update it as well
-      if (currentUserModel.currentAddress == oldAddress) {
+      // If this was the current one → update
+      if (currentUserModel.currentAddress == oldAddress['address']) {
         await userDoc.set({
-          'currentAddress': newAddress,
+          'currentAddress': addressObj,
         }, SetOptions(merge: true));
-        currentUserModel.currentAddress = newAddress;
+        currentUserModel.currentAddress = Map<String, dynamic>.from(addressObj);
       }
-      // await refreshUserModel(); // new function
+
       emit(ProductSaveAddressSuccessState());
     } catch (e) {
       log(e.toString());
@@ -1663,13 +1689,21 @@ class ProductCubit extends Cubit<ProductState> {
     }
   }
 
-  Future<void> setCurrentAddress({required String address}) async {
+  Future<void> setCurrentAddress({
+    required Map<String, dynamic> addressObj,
+  }) async {
     emit(ProductSaveAddressLoadingState());
     try {
       final userDoc = FirebaseFirestore.instance.collection('users').doc(uId);
-      await userDoc.set({'currentAddress': address}, SetOptions(merge: true));
-      currentUserModel.currentAddress = address;
-      // await refreshUserModel(); // new function
+
+      // Save the whole object (with name + address)
+      await userDoc.set({
+        'currentAddress': addressObj,
+      }, SetOptions(merge: true));
+
+      // Update local model
+      currentUserModel.currentAddress = Map<String, dynamic>.from(addressObj);
+
       emit(ProductSaveAddressSuccessState());
     } catch (e) {
       log(e.toString());

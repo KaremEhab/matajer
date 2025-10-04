@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconly/iconly.dart';
 import 'package:matajer/constants/colors.dart';
 import 'package:matajer/constants/functions.dart';
 import 'package:matajer/generated/l10n.dart';
@@ -250,17 +251,18 @@ class ProductMentionCard extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              Positioned.fill(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: CachedNetworkImage(
-                    imageUrl: product.images.length > 1
-                        ? product.images[1]
-                        : product.images.first,
-                    fit: BoxFit.cover,
+              if (product.images.isNotEmpty)
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: CachedNetworkImage(
+                      imageUrl: product.images.length > 1
+                          ? product.images[1]
+                          : product.images.first,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-              ),
               Positioned.fill(
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -289,10 +291,17 @@ class ProductMentionCard extends StatelessWidget {
                               strokeAlign: BorderSide.strokeAlignOutside,
                             ),
                           ),
-                          child: CachedNetworkImage(
-                            imageUrl: product.images.first,
-                            fit: BoxFit.cover,
-                          ),
+                          child: product.images.isEmpty
+                              ? Material(
+                                  color: lightGreyColor.withOpacity(0.4),
+                                  child: Center(
+                                    child: Icon(IconlyLight.image, size: 50),
+                                  ),
+                                )
+                              : CachedNetworkImage(
+                                  imageUrl: product.images.first,
+                                  fit: BoxFit.cover,
+                                ),
                         ),
                       ),
                       Expanded(
@@ -354,7 +363,9 @@ class ProductMentionCard extends StatelessWidget {
                                         // Price
                                         if (product.discount <= 0)
                                           Text(
-                                            formatNumberWithCommas(product.price.toDouble()),
+                                            formatNumberWithCommas(
+                                              product.price.toDouble(),
+                                            ),
                                             style: const TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.w900,
@@ -364,7 +375,11 @@ class ProductMentionCard extends StatelessWidget {
                                         // Discounted Price
                                         if (product.discount > 0)
                                           Text(
-                                            formatNumberWithCommas(product.price - product.price * (product.discount / 100)),
+                                            formatNumberWithCommas(
+                                              product.price -
+                                                  product.price *
+                                                      (product.discount / 100),
+                                            ),
                                             style: TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.w900,

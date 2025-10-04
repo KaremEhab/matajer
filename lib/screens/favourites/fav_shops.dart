@@ -43,7 +43,12 @@ class _FavouritesState extends State<Favourites> {
         forceMaterialTransparency: true,
         leadingWidth: 57,
         leading: Padding(
-          padding: EdgeInsets.fromLTRB(7, 6, 7, 6),
+          padding: EdgeInsets.fromLTRB(
+            lang == 'en' ? 7 : 0,
+            6,
+            lang == 'en' ? 0 : 7,
+            6,
+          ),
           child: Material(
             color: lightGreyColor.withOpacity(0.4),
             borderRadius: BorderRadius.circular(12),
@@ -53,11 +58,7 @@ class _FavouritesState extends State<Favourites> {
                 Navigator.pop(context);
               },
               child: Center(
-                child: Icon(
-                  Icons.keyboard_arrow_left_rounded,
-                  color: textColor,
-                  size: 27,
-                ),
+                child: Icon(backIcon(), color: textColor, size: 27),
               ),
             ),
           ),
@@ -78,7 +79,7 @@ class _FavouritesState extends State<Favourites> {
                 });
               },
               child: Text(
-                'Shops',
+                S.current.matajer,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -103,7 +104,7 @@ class _FavouritesState extends State<Favourites> {
                 });
               },
               child: Text(
-                'Products',
+                S.current.products,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -208,7 +209,7 @@ class _FavouriteShopsState extends State<FavouriteShops> {
                       )
                     : Center(
                         child: Text(
-                          'No Favourite Shops',
+                          S.current.no_fav_shops,
                           style: TextStyle(
                             fontSize: 20.sp,
                             fontWeight: FontWeight.w600,
@@ -364,7 +365,7 @@ class _ProductShopsState extends State<ProductShops> {
                       )
                     : Center(
                         child: Text(
-                          'No Favourite Products',
+                          S.current.no_fav_products,
                           style: TextStyle(
                             fontSize: 20.sp,
                             fontWeight: FontWeight.w600,

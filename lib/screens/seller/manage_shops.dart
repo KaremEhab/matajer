@@ -13,6 +13,7 @@ import 'package:matajer/constants/functions.dart';
 import 'package:matajer/constants/vars.dart';
 import 'package:matajer/generated/l10n.dart';
 import 'package:matajer/models/shop_model.dart';
+import 'package:matajer/screens/auth/register_as_seller.dart';
 import 'package:matajer/screens/home/categories/shop_list_card.dart';
 import 'package:matajer/screens/seller/widgets/manage_shop_appBar.dart';
 import 'package:matajer/widgets/custom_form_field.dart';
@@ -28,6 +29,8 @@ class ManageShopPage extends StatefulWidget {
 
 class _ManageShopPageState extends State<ManageShopPage> {
   final ScrollController _scrollController = ScrollController();
+  late List<Map<String, dynamic>> deliveryOptions;
+
   final _formKey = GlobalKey<FormState>();
   bool showCollapsedActions = false;
 
@@ -38,8 +41,6 @@ class _ManageShopPageState extends State<ManageShopPage> {
   late TextEditingController shopNameController;
   late TextEditingController shopCategoryController;
   late TextEditingController shopDescriptionController;
-  late TextEditingController deliveryDaysController;
-  late TextEditingController avgResponseTimeController;
   late TextEditingController licenseNumberController;
 
   bool autoAcceptOrders = false;
@@ -63,12 +64,10 @@ class _ManageShopPageState extends State<ManageShopPage> {
     shopDescriptionController = TextEditingController(
       text: shop.shopDescription,
     );
-    deliveryDaysController = TextEditingController(
-      text: shop.deliveryDays.toString(),
-    );
-    avgResponseTimeController = TextEditingController(
-      text: shop.avgResponseTime.toString(),
-    );
+    // ✅ initial delivery options
+    deliveryOptions = shop.deliveryOptions != null
+        ? List<Map<String, dynamic>>.from(shop.deliveryOptions!)
+        : [];
     licenseNumberController = TextEditingController(
       text: shop.sellerLicenseNumber.toString(),
     );
@@ -104,16 +103,27 @@ class _ManageShopPageState extends State<ManageShopPage> {
           shopNameController.text.trim() != shop.shopName ||
           shopCategoryController.text.trim() != shop.shopCategory ||
           shopDescriptionController.text.trim() != shop.shopDescription ||
-          deliveryDaysController.text.trim() != shop.deliveryDays.toString() ||
-          avgResponseTimeController.text.trim() !=
-              shop.avgResponseTime.toString() ||
           licenseNumberController.text.trim() !=
               shop.sellerLicenseNumber.toString() ||
           autoAcceptOrders != shop.autoAcceptOrders ||
           newLogoFile != null ||
           newBannerFile != null ||
-          newLicenseFile != null;
+          newLicenseFile != null ||
+          // ✅ check delivery options
+          !_listEquals(deliveryOptions, shop.deliveryOptions ?? []);
     });
+  }
+
+  /// helper function to compare two list of maps
+  bool _listEquals(List<Map<String, dynamic>> a, List<Map<String, dynamic>> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i].length != b[i].length) return false;
+      for (final key in a[i].keys) {
+        if (a[i][key] != b[i][key]) return false;
+      }
+    }
+    return true;
   }
 
   Future<void> pickImage(String type) async {
@@ -163,39 +173,34 @@ class _ManageShopPageState extends State<ManageShopPage> {
         );
       }
 
-      // build updated model
       final updatedShop = widget.shopModel.copyWith(
         shopName: shopNameController.text.trim(),
         shopCategory: shopCategoryController.text.trim(),
         shopDescription: shopDescriptionController.text.trim(),
-        deliveryDays: int.tryParse(deliveryDaysController.text.trim()) ?? 0,
-        avgResponseTime:
-            int.tryParse(avgResponseTimeController.text.trim()) ?? 0,
         sellerLicenseNumber:
             num.tryParse(licenseNumberController.text.trim()) ?? 0,
         autoAcceptOrders: autoAcceptOrders,
         shopLogoUrl: logoUrl,
         shopBannerUrl: bannerUrl,
         sellerLicenseImageUrl: licenseUrl,
+        // ✅ أضفناها هنا
+        deliveryOptions: deliveryOptions,
       );
 
-      // update Firestore
       await FirebaseFirestore.instance
           .collection('shops')
           .doc(widget.shopModel.shopId)
           .update(updatedShop.toMap());
 
-      // ✅ Update both global and local state
       setState(() {
-        currentShopModel = updatedShop; // global variable (from vars.dart)
-        widget.shopModel.updateFrom(updatedShop); // optional sync helper
+        currentShopModel = updatedShop;
+        widget.shopModel.updateFrom(updatedShop);
         hasChanges = false;
         newLogoFile = null;
         newBannerFile = null;
         newLicenseFile = null;
       });
 
-      // ✅ Optionally persist locally in cache
       await CacheHelper.saveData(
         key: 'currentShopModel',
         value: jsonEncode(updatedShop.toMap()),
@@ -419,47 +424,28 @@ class _ManageShopPageState extends State<ManageShopPage> {
                       ),
 
                       // Shop Description
-                      Row(
-                        spacing: 10,
-                        children: [
-                          Expanded(
-                            child: CustomFormField(
-                              fontSize: 14,
-                              hasTitle: true,
-                              textColor: textColor,
-                              title: S.of(context).delivery_days,
-                              hint: S.of(context).delivery_days_hint,
-                              onTap: () {},
-                              onChanged: (_) => checkForChanges(),
-                              validator: (value) {
-                                if (value!.isEmpty) {
-                                  return S.of(context).delivery_days_validation;
-                                }
-                                return null;
-                              },
-                              controller: deliveryDaysController,
-                            ),
-                          ),
-                          Expanded(
-                            child: CustomFormField(
-                              fontSize: 14,
-                              hasTitle: true,
-                              textColor: textColor,
-                              title: S.of(context).avg_response,
-                              hint: S.of(context).avg_response_hint,
-                              onTap: () {},
-                              onChanged: (_) => checkForChanges(),
-                              validator: (value) {
-                                if (value!.isEmpty) {
-                                  return S.of(context).avg_response_validation;
-                                }
-                                return null;
-                              },
-                              controller: avgResponseTimeController,
-                            ),
-                          ),
-                        ],
-                      ),
+                      // Row(
+                      //   spacing: 10,
+                      //   children: [
+                      //     Expanded(
+                      //       child: CustomFormField(
+                      //         fontSize: 14,
+                      //         hasTitle: true,
+                      //         textColor: textColor,
+                      //         title: S.of(context).delivery_days,
+                      //         hint: S.of(context).delivery_days_hint,
+                      //         onTap: () {},
+                      //         onChanged: (_) => checkForChanges(),
+                      //         validator: (value) {
+                      //           if (value!.isEmpty) {
+                      //             return S.of(context).delivery_days_validation;
+                      //           }
+                      //           return null;
+                      //         },
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
 
                       // Shop Category
                       Column(
@@ -632,6 +618,61 @@ class _ManageShopPageState extends State<ManageShopPage> {
                               },
                             ),
                           ),
+                        ],
+                      ),
+
+                      // ✅ Delivery options button + preview
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            S.of(context).delivery_days,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: textColor,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (context) {
+                                  return DeliveryOptionsSheet(
+                                    emiratesMap: emiratesMap,
+                                    initialOptions: deliveryOptions,
+                                    onSave: (options) {
+                                      setState(() {
+                                        deliveryOptions = options;
+                                        checkForChanges();
+                                      });
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                            child: Text("Edit Delivery Options"),
+                          ),
+                          // ✅ ملخص القيم
+                          if (deliveryOptions.isNotEmpty)
+                            Column(
+                              children: deliveryOptions.map((opt) {
+                                final emirate = opt['emirate'] ?? '';
+                                final price = opt['price'] ?? 0;
+                                final days = opt['days'] ?? 0;
+                                return ListTile(
+                                  title: Text(
+                                    emiratesMap.keys.firstWhere(
+                                      (k) => emiratesMap[k] == emirate,
+                                      orElse: () => emirate,
+                                    ),
+                                  ),
+                                  subtitle: Text("Price: $price | Days: $days"),
+                                );
+                              }).toList(),
+                            ),
                         ],
                       ),
                     ],

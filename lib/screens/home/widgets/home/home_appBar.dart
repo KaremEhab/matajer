@@ -82,7 +82,7 @@ class HomeAppBar extends StatelessWidget {
 
 Widget buildAddressMenu(BuildContext context, double xAxis) {
   return BlocSelector<ProductCubit, ProductState, String>(
-    selector: (_) => currentUserModel.currentAddress ?? '',
+    selector: (_) => currentUserModel.currentAddress?['name'] ?? '',
     builder: (context, currentAddress) {
       final addressText = SizedBox(
         width: 0.55.sw,
@@ -158,23 +158,23 @@ Widget buildAddressMenu(BuildContext context, double xAxis) {
       }
 
       // Interactive address menu
-      return PopupMenuButton<String>(
+      return PopupMenuButton<Map<String, dynamic>>(
         tooltip: S.of(context).address_menu,
         offset: Offset(xAxis, 50),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         color: Colors.white,
         onSelected: (value) async {
           final cubit = ProductCubit.get(context);
-          if (value == 'add_new') {
+          if (value['type'] == 'add_new') {
             final selected = await Navigator.push<String>(
               context,
               MaterialPageRoute(builder: (_) => const MapPickerScreen()),
             );
             if (selected != null && selected.isNotEmpty) {
-              await cubit.addNewAddress(address: selected);
+              await cubit.addNewAddress(name: "", address: selected);
             }
           } else {
-            await cubit.setCurrentAddress(address: value);
+            await cubit.setCurrentAddress(addressObj: value);
           }
         },
         itemBuilder: (context) => buildAddressItems(context),
@@ -188,12 +188,14 @@ Widget buildAddressMenu(BuildContext context, double xAxis) {
   );
 }
 
-List<PopupMenuEntry<String>> buildAddressItems(BuildContext context) {
+List<PopupMenuEntry<Map<String, dynamic>>> buildAddressItems(
+  BuildContext context,
+) {
   final addresses = currentUserModel.addresses;
 
   return [
-    PopupMenuItem<String>(
-      value: 'add_new',
+    PopupMenuItem<Map<String, dynamic>>(
+      value: {'type': 'add_new'},
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -207,32 +209,35 @@ List<PopupMenuEntry<String>> buildAddressItems(BuildContext context) {
     ),
     if (addresses.isNotEmpty)
       PopupMenuDivider(thickness: 1.5, color: Colors.grey.withOpacity(0.3)),
+
     ...addresses.map(
-      (address) => PopupMenuItem<String>(
+      (address) => PopupMenuItem<Map<String, dynamic>>(
         value: address,
         padding: EdgeInsets.zero,
         child: SizedBox(
           width: 0.8.sw,
           child: Row(
             children: [
-              Radio<String>(
+              Radio<Map<String, dynamic>>(
                 value: address,
                 activeColor: primaryColor,
                 groupValue: currentUserModel.currentAddress,
                 onChanged: (val) {
-                  Navigator.pop(context);
-                  ProductCubit.get(context).setCurrentAddress(address: val!);
+                  Navigator.pop(context, val);
                 },
               ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(right: 10, bottom: 5),
                   child: Text(
-                    address,
+                    "${address['name'] ?? ''} - ${address['address'] ?? ''}",
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: currentUserModel.currentAddress == address
+                      color:
+                          currentUserModel.currentAddress != null &&
+                              currentUserModel.currentAddress!['address'] ==
+                                  address['address']
                           ? primaryColor
                           : textColor,
                     ),

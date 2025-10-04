@@ -1,9 +1,9 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconly/iconly.dart';
+import 'package:collection/collection.dart'; // for DeepCollectionEquality
 import 'package:matajer/constants/colors.dart';
 import 'package:matajer/constants/vars.dart';
 import 'package:matajer/cubit/product/product_cubit.dart';
@@ -19,27 +19,32 @@ class SavedAddress extends StatefulWidget {
 }
 
 class _SavedAddressState extends State<SavedAddress> {
-  late List<String> originalAddresses;
-  late String originalCurrentAddress;
+  late List<Map<String, dynamic>> originalAddresses;
+  late Map<String, dynamic>? originalCurrentAddress;
 
-  late String selectedAddress; // local selection
+  late Map<String, dynamic> selectedAddress; // local selection
   bool hasChanges = false;
 
   @override
   void initState() {
     super.initState();
-    originalAddresses = List<String>.from(currentUserModel.addresses);
+    originalAddresses = List<Map<String, dynamic>>.from(
+      currentUserModel.addresses,
+    );
     originalCurrentAddress = currentUserModel.currentAddress;
-    selectedAddress = currentUserModel.currentAddress;
+    selectedAddress = currentUserModel.currentAddress ?? {};
   }
 
   void checkForChanges() {
     final currentList = currentUserModel.addresses;
     final listChanged =
         currentList.length != originalAddresses.length ||
-        !ListEquality().equals(currentList, originalAddresses);
+        !const DeepCollectionEquality().equals(currentList, originalAddresses);
 
-    final addressChanged = selectedAddress != originalCurrentAddress;
+    final addressChanged = !const DeepCollectionEquality().equals(
+      selectedAddress,
+      originalCurrentAddress,
+    );
 
     setState(() {
       hasChanges = listChanged || addressChanged;
@@ -47,13 +52,16 @@ class _SavedAddressState extends State<SavedAddress> {
   }
 
   Future<void> saveChanges() async {
-    // Update both addresses and currentAddress in Firebase
-    await ProductCubit.get(context).setCurrentAddress(address: selectedAddress);
-
-    // Reset original state
-    originalAddresses = List<String>.from(currentUserModel.addresses);
-    originalCurrentAddress = selectedAddress;
-    checkForChanges();
+    if (selectedAddress.isNotEmpty) {
+      await ProductCubit.get(
+        context,
+      ).setCurrentAddress(addressObj: selectedAddress);
+      originalAddresses = List<Map<String, dynamic>>.from(
+        currentUserModel.addresses,
+      );
+      originalCurrentAddress = Map<String, dynamic>.from(selectedAddress);
+      checkForChanges();
+    }
   }
 
   @override
@@ -107,11 +115,11 @@ class _SavedAddressState extends State<SavedAddress> {
           body: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 7),
+              padding: const EdgeInsets.symmetric(horizontal: 7),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
                   Text(
                     s.delivery_address_subtitle,
                     style: TextStyle(
@@ -131,7 +139,7 @@ class _SavedAddressState extends State<SavedAddress> {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Material(
                     color: greyColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(15.r),
@@ -146,13 +154,48 @@ class _SavedAddressState extends State<SavedAddress> {
                               ),
                             );
                             if (selected != null && selected.isNotEmpty) {
-                              await ProductCubit.get(
-                                context,
-                              ).addNewAddress(address: selected);
-                              setState(() {
-                                selectedAddress = selected;
-                              });
-                              checkForChanges();
+                              final nameController = TextEditingController();
+                              showDialog(
+                                context: context,
+                                builder: (_) {
+                                  return AlertDialog(
+                                    title: Text(s.enter_address_name),
+                                    content: TextFormField(
+                                      controller: nameController,
+                                      decoration: InputDecoration(
+                                        hintText: s.enter_address_name,
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text(s.cancel),
+                                      ),
+                                      TextButton(
+                                        onPressed: () async {
+                                          final newAddress = {
+                                            "name": nameController.text,
+                                            "address": selected,
+                                          };
+                                          await ProductCubit.get(
+                                            context,
+                                          ).addNewAddress(
+                                            name: nameController.text,
+                                            address: selected,
+                                          );
+                                          setState(() {
+                                            selectedAddress = newAddress;
+                                          });
+                                          checkForChanges();
+                                          if (!context.mounted) return;
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text(s.save),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
                             }
                           },
                           child: Padding(
@@ -166,7 +209,7 @@ class _SavedAddressState extends State<SavedAddress> {
                                 Row(
                                   children: [
                                     Icon(Icons.add, size: 25, color: textColor),
-                                    SizedBox(width: 15),
+                                    const SizedBox(width: 15),
                                     Text(
                                       s.add_new_location,
                                       style: TextStyle(
@@ -187,21 +230,24 @@ class _SavedAddressState extends State<SavedAddress> {
                           ),
                         ),
 
+                        // Address list
                         ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: currentUserModel.addresses.length,
                           padding: EdgeInsets.zero,
                           itemBuilder: (context, index) {
-                            final address = currentUserModel.addresses[index];
+                            final addressMap =
+                                currentUserModel.addresses[index];
+                            final name = addressMap['name'] ?? 'Address';
+                            final address = addressMap['address'] ?? '';
                             final isSingleAddress =
                                 currentUserModel.addresses.length == 1;
 
                             return InkWell(
                               onTap: () {
                                 setState(() {
-                                  selectedAddress =
-                                      address; // update local UI state
+                                  selectedAddress = addressMap;
                                 });
                                 checkForChanges();
                               },
@@ -212,7 +258,6 @@ class _SavedAddressState extends State<SavedAddress> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
-                                      // <-- This allows wrapping and prevents overflow
                                       child: Row(
                                         children: [
                                           isSingleAddress
@@ -221,8 +266,8 @@ class _SavedAddressState extends State<SavedAddress> {
                                                   size: 28,
                                                   color: textColor,
                                                 )
-                                              : Radio<String>(
-                                                  value: address,
+                                              : Radio<Map<String, dynamic>>(
+                                                  value: addressMap,
                                                   activeColor: primaryColor,
                                                   groupValue: selectedAddress,
                                                   onChanged: (value) {
@@ -232,28 +277,28 @@ class _SavedAddressState extends State<SavedAddress> {
                                                     checkForChanges();
                                                   },
                                                 ),
-                                          SizedBox(width: 15),
+                                          const SizedBox(width: 15),
                                           Expanded(
-                                            // <-- This ensures the text wraps instead of overflowing
                                             child: Column(
+                                              spacing: 5,
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  s.your_delivery_address,
+                                                  name,
                                                   style: TextStyle(
                                                     fontSize: 15,
                                                     fontWeight: FontWeight.w500,
                                                     color: textColor,
                                                   ),
-                                                  overflow: TextOverflow
-                                                      .ellipsis, // optional
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                                 Text(
                                                   address,
-                                                  style: TextStyle(
-                                                    fontSize: 17,
-                                                    fontWeight: FontWeight.w800,
+                                                  style: const TextStyle(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.w600,
                                                     color: primaryColor,
                                                   ),
                                                 ),
@@ -265,60 +310,58 @@ class _SavedAddressState extends State<SavedAddress> {
                                     ),
                                     IconButton(
                                       onPressed: () {
-                                        TextEditingController
-                                        addressController =
+                                        final nameController =
+                                            TextEditingController(text: name);
+                                        final addressController =
                                             TextEditingController(
                                               text: address,
                                             );
+
                                         AlertDialog alert = AlertDialog(
                                           title: Text(s.edit_address),
-                                          content: TextFormField(
-                                            controller: addressController,
-                                            decoration: InputDecoration(
-                                              hintText: s.enter_your_address,
-                                              hintStyle: TextStyle(
-                                                color: textColor.withOpacity(
-                                                  0.5,
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              TextFormField(
+                                                controller: nameController,
+                                                decoration: InputDecoration(
+                                                  hintText:
+                                                      s.enter_address_name,
                                                 ),
                                               ),
-                                              border: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10.r),
-                                                borderSide: BorderSide(
-                                                  color: textColor.withOpacity(
-                                                    0.5,
-                                                  ),
+                                              const SizedBox(height: 10),
+                                              TextFormField(
+                                                controller: addressController,
+                                                decoration: InputDecoration(
+                                                  hintText:
+                                                      s.enter_your_address,
                                                 ),
                                               ),
-                                              focusedBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10.r),
-                                                borderSide: const BorderSide(
-                                                  color: primaryColor,
-                                                ),
-                                              ),
-                                            ),
+                                            ],
                                           ),
                                           actions: [
                                             TextButton(
                                               onPressed: () =>
                                                   Navigator.pop(context),
-                                              child: Text(
-                                                s.cancel,
-                                                style: TextStyle(
-                                                  color: textColor,
-                                                ),
-                                              ),
+                                              child: Text(s.cancel),
                                             ),
                                             TextButton(
                                               onPressed: () async {
+                                                final updated = {
+                                                  "name": nameController.text,
+                                                  "address":
+                                                      addressController.text,
+                                                };
                                                 await ProductCubit.get(
                                                   context,
                                                 ).changeSpecificAddress(
                                                   index: index,
-                                                  newAddress:
-                                                      addressController.text,
+                                                  addressObj: updated,
                                                 );
+                                                setState(() {
+                                                  selectedAddress = updated;
+                                                });
+                                                checkForChanges();
                                                 if (!context.mounted) return;
                                                 Navigator.pop(context);
                                               },
@@ -375,7 +418,7 @@ class _SavedAddressState extends State<SavedAddress> {
                           child: Center(
                             child: Text(
                               s.save_changes,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 height: 0.8,
                                 color: Colors.white,
                                 fontSize: 20,

@@ -239,8 +239,17 @@ class NotificationCubit extends Cubit<NotificationState> {
         data['fcmTokens'],
       ).toSet().toList();
 
+      log(
+        "📤 Sending notification from [Sender: $fcmDeviceToken] → [Receiver: ${fcmTokens.first}]",
+      );
+
       for (final token in fcmTokens) {
         try {
+
+          log(
+            "📤 Sending notification from [Sender: $fcmDeviceToken] → [Receiver: $token]",
+          );
+
           final response = await _dio.post(
             _fcmEndpoint,
             options: Options(
@@ -263,6 +272,7 @@ class NotificationCubit extends Cubit<NotificationState> {
               },
             },
           );
+
           log("✅ Notification sent to $token: ${response.statusCode}");
         } catch (e) {
           log("⚠️ Error sending to $token: $e");

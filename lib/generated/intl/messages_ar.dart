@@ -20,6 +20,24 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'ar';
 
+  static String m0(count) =>
+      "${Intl.plural(count, zero: 'أيام', one: 'يوم', two: 'يومين', few: 'أيام', many: 'يوم', other: 'يوم')}";
+
+  static String m1(count) =>
+      "${Intl.plural(count, zero: 'ساعات', one: 'ساعة', two: 'ساعتين', few: 'ساعات', many: 'ساعة', other: 'ساعة')}";
+
+  static String m2(count) =>
+      "${Intl.plural(count, zero: 'دقائق', one: 'دقيقة', two: 'دقيقتين', few: 'دقائق', many: 'دقيقة', other: 'دقيقة')}";
+
+  static String m3(count) =>
+      "${Intl.plural(count, one: 'شهر', two: 'شهرين', few: 'أشهر', other: 'شهر')}";
+
+  static String m4(count) =>
+      "${Intl.plural(count, zero: 'ثواني', one: 'ثانية', two: 'ثانيتين', few: 'ثوانٍ', many: 'ثانية', other: 'ثانية')}";
+
+  static String m5(count) =>
+      "${Intl.plural(count, one: 'أسبوع', two: 'أسبوعين', few: 'أسابيع', other: 'أسبوع')}";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "Shipping_fees": MessageLookupByLibrary.simpleMessage("ضريبة التوصيل"),
@@ -286,6 +304,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "data_usage_desc": MessageLookupByLibrary.simpleMessage(
       "نستخدم بياناتك لمعالجة الطلبات، تحسين خدماتنا، تقديم الدعم الفني، وإشعارك بالتحديثات المتعلقة بطلباتك أو حسابك.",
     ),
+    "day": m0,
     "days": MessageLookupByLibrary.simpleMessage("أيام"),
     "decline": MessageLookupByLibrary.simpleMessage("رفض"),
     "delayed_order_issues": MessageLookupByLibrary.simpleMessage(
@@ -361,6 +380,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "english": MessageLookupByLibrary.simpleMessage("الانجليزية"),
     "enter_address": MessageLookupByLibrary.simpleMessage("أدخل عنوانك الجديد"),
+    "enter_address_name": MessageLookupByLibrary.simpleMessage(
+      "أدخل اسم لعنوانك",
+    ),
     "enter_password": MessageLookupByLibrary.simpleMessage(
       "يرجى إدخال كلمة المرور",
     ),
@@ -439,6 +461,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "كلمة المرور القديمة هي...",
     ),
     "history": MessageLookupByLibrary.simpleMessage("السجل"),
+    "hour": m1,
     "hours": MessageLookupByLibrary.simpleMessage("ساعات"),
     "image": MessageLookupByLibrary.simpleMessage("صورة"),
     "image_validation": MessageLookupByLibrary.simpleMessage(
@@ -485,6 +508,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "جارٍ تحميل وقت التوصيل...",
     ),
     "location": MessageLookupByLibrary.simpleMessage("الموقع"),
+    "location_already_saved": MessageLookupByLibrary.simpleMessage(
+      "العنوان موجود بالفعل",
+    ),
     "logo": MessageLookupByLibrary.simpleMessage("الشعار"),
     "logout": MessageLookupByLibrary.simpleMessage("تسجيل الخروج"),
     "lorem_description": MessageLookupByLibrary.simpleMessage(
@@ -513,7 +539,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "messages_tip": MessageLookupByLibrary.simpleMessage(
       "تلقي تنبيهات عند استلام رسالة جديدة من عميل أو مشرف",
     ),
+    "minute": m2,
     "minutes": MessageLookupByLibrary.simpleMessage("دقائق"),
+    "month": m3,
     "monthly": MessageLookupByLibrary.simpleMessage("شهريًا"),
     "months": MessageLookupByLibrary.simpleMessage("شهور"),
     "multi_payment_issues": MessageLookupByLibrary.simpleMessage(
@@ -554,6 +582,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "no_drafts_found": MessageLookupByLibrary.simpleMessage(
       "لا يتوفر أي مسودات",
     ),
+    "no_fav_products": MessageLookupByLibrary.simpleMessage(
+      "لا يوجد منتجات مفضلة",
+    ),
+    "no_fav_shops": MessageLookupByLibrary.simpleMessage("لا يوجد متاجر مفضلة"),
     "no_internet_connection": MessageLookupByLibrary.simpleMessage(
       "لا يوجد اتصال بالشبكة",
     ),
@@ -862,6 +894,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "searching_for_topic": MessageLookupByLibrary.simpleMessage(
       "تبحث عن موضوع معين؟",
     ),
+    "second": m4,
     "secure_payments": MessageLookupByLibrary.simpleMessage("دفع آمن"),
     "security_measures": MessageLookupByLibrary.simpleMessage("إجراءات الأمان"),
     "security_measures_desc": MessageLookupByLibrary.simpleMessage(
@@ -874,6 +907,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "select": MessageLookupByLibrary.simpleMessage("اختيار"),
     "select_emirate": MessageLookupByLibrary.simpleMessage("اختر الإمارة"),
     "select_gender": MessageLookupByLibrary.simpleMessage("اختر الجنس"),
+    "select_this_location": MessageLookupByLibrary.simpleMessage(
+      "أختر هذا العنوان",
+    ),
     "selected_products": MessageLookupByLibrary.simpleMessage(
       "المنتج/المنتجات المحددة؟",
     ),
@@ -1052,6 +1088,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "هل تريد حفظ التقدم كمسودة؟",
     ),
     "warning": MessageLookupByLibrary.simpleMessage("تحذير"),
+    "week": m5,
     "weekly": MessageLookupByLibrary.simpleMessage("أسبوعيًا"),
     "weeks": MessageLookupByLibrary.simpleMessage("اسابيع"),
     "welcome_create_account": MessageLookupByLibrary.simpleMessage(
